@@ -1,26 +1,80 @@
 from mdf_forge.forge import Forge
-from sklearn.neighbors import KNeighborsRegressor
-import pandas
+from matminer.featurizers import composition as cf
+from matplotlib import pyplot as plt
+import numpy as np
+import pandas as pd
+from pymatgen import Composition
+from pymatgen.core.periodic_table import Element
+from sklearn import metrics
+from sklearn.neighbors import NearestNeighbors
 
-# Read in dataset
-filepath = "C:\\Users\\mvane\\Documents\\Skunkworks\\BMG\\BMG_full_dataset.csv"
-all_data = pandas.read_csv(filepath)
-all_formulas = all_data["formula"]
+def main():
+	# Read in dataset
+	filepath = "C:\\Users\\mvane\\Documents\\GitHub\\better-glasses\\formulas_subset.csv"
+	glass_data = pd.read_csv(filepath)
+	glass_data = glass_data['composition']
 
-# Set up forge
-mdf = Forge()
+	# Set up forge
+	mdf = Forge()
 
-# Add a field to match. We'd like to query OQMD, so we'll limit results to those from OQMD here.
-mdf.match_sources("oqmd")
-# Feed in the elements we'd like to search for. Starting w/ binaries so I can figure out if this is maybe working
-mdf.match_elements(["Ca", "Mg", "Zn"])
+	# Get all converged results from OQMD. Currently have "quick demo" set so searches don't take as long while testing code
+	# Note: Advanced args (match field or source) cleared when we call search(), so add reset_query = false to keep matches
+	# Note: Use mdf.aggregate() if we need to retrieve > 10000 results from OQMD
+	result_records = mdf.aggregate('mdf.source_name:oqmd AND (oqmd.configuration:static OR oqmd.configuration:standard) ' + 
+		'AND oqmd.converged:True AND mdf.scroll_id:<10000')
+	print('Found %d compounds'%len(result_records))
 
-# Search for entries with a specific element. Here, search for the largest element perhaps?
-# Advanced args (match field or source) cleared when we call search(), so add reset_query = false to keep matches
-# Use mdf.aggregate() if we need to retrieve > 10000 results from OQMD
-results = mdf.search(reset_query=False)
+	# Convert results into pandas dataframe and get lowest energy compound at each composition
+	oqmd_data = pd.DataFrame([x['mdf']['links']['landing_page'] for x in result_records], columns=['oqmd_url'])
 
-# This doesn't work for me yet
-# Download results. You need to have your computer set up to be an endpoint with globus and have it running 
-# (See https://github.com/materials-data-facility/forge/blob/master/docs/tutorials/6%20-%20Data%20Retrieval%20Functions.ipynb)
-#mdf.globus_download(results)
+	# Get composition of alloys and enthalpy of formation
+	oqmd_data['composition'], oqmd_data['delta_e'], oqmd_data['enerprint(oqmd_data['composition'])
+
+	
+	# Convert compositions to pymatgen objects
+	oqmd_data['composition_pmg'] = oqmd_data['composition'].apply(lambda x: Composition(x))
+	
+	# Remove results from memory for better efficiency
+	del result_records
+	
+	# Remove compounds without delta E
+	for k in ['delta_e', 'energy']:
+		oqmd_data[k] = pd.to_numeric(oqmd_data[k])
+		
+	# Keep only the ground state of each composition
+	oqmd_data['composition_str'] = oqmd_data['composition_pmg'].apply(lambda x: x.reduced_formula)
+	oqmd_data.sort_values('energy', ascending=True, inplace=True)
+	oqmd_data.drop_duplicates('composition_str', keep='first', inplace=True)
+	
+	print("We've made it this far")
+	
+	# SET UP SOME ML
+	
+	# Find the nearest compositions and create cluster
+	
+	# Find average formation energy for the cluster and set this value to the glasses data's formation energy
+
+	
+	
+def get_data(entry):
+    """Get the composition, structure, band gap, and stability of an entry given its search result
+    
+    :param entry: dict, metadata for an entry as returned by Globus search
+    :return: Several items
+        - str, composition of the material
+        - float, formation energy of material
+        - float, Energy per atom (eV/atom)"""  
+    
+    # Get the metadata as a dict
+    oqmd_data = entry['oqmd']
+    
+    # Return results
+    return entry['mdf']['composition'], \
+        oqmd_data.get('delta_e', {}).get('value'), \
+        oqmd_data['total_energy'].get('value', np.nan)
+		
+		
+		
+# Run the script:
+if __name__ == '__main__':
+    main()
