@@ -57,11 +57,7 @@ def main():
 	feature_calculators = [cf.Stoichiometry(), cf.ElementProperty.from_preset("magpie"), \
 		cf.ValenceOrbital(props=['frac']), cf.IonProperty()]
 		
-	# Build that data as 'features'. You need to have Magpie for this, you can clone it using the following command:
-	# git clone https://bitbucket.org/wolverton/magpie.git
-	# This will clone magpie into the directory you're currently working in. I used gradle to build after this.
-	# Once you get gradle, you just navigate into the magpie folder and type the command 'gradlew jar' on Windows.
-
+	# Build that data as 'features'. 
 	feature_labels = list(itertools.chain.from_iterable([x.feature_labels() for x in feature_calculators]))
 	
 	for fc in feature_calculators:
