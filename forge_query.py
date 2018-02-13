@@ -3,16 +3,22 @@ from matminer.featurizers import composition as cf
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+import itertools
 from pymatgen import Composition
 from pymatgen.core.periodic_table import Element
 from sklearn import metrics
-from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import KNeighborsRegressor
 
 def main():
 	# Read in dataset
 	filepath = "C:\\Users\\mvane\\Documents\\GitHub\\better-glasses\\formulas_subset.csv"
 	glass_data = pd.read_csv(filepath)
 	glass_data = glass_data['composition']
+	# Make the compositions of the glasses data into pymatgen objects to match the data from OQMD
+	# Convert data into pandas dataframe
+	glass_data = pd.DataFrame(data = glass_data, columns=['composition'])
+	# Convert compositions to pymatgen objects
+	glass_data['composition'] = glass_data['composition'].apply(lambda x: Composition(x))
 
 	# Set up forge
 	mdf = Forge()
@@ -28,8 +34,7 @@ def main():
 	oqmd_data = pd.DataFrame([x['mdf']['links']['landing_page'] for x in result_records], columns=['oqmd_url'])
 
 	# Get composition of alloys and enthalpy of formation
-	oqmd_data['composition'], oqmd_data['delta_e'], oqmd_data['enerprint(oqmd_data['composition'])
-
+	oqmd_data['composition'], oqmd_data['delta_e'], oqmd_data['energy'] = list(zip(*[get_data(x) for x in result_records]))
 	
 	# Convert compositions to pymatgen objects
 	oqmd_data['composition_pmg'] = oqmd_data['composition'].apply(lambda x: Composition(x))
@@ -48,12 +53,32 @@ def main():
 	
 	print("We've made it this far")
 	
-	# SET UP SOME ML
-	
-	# Find the nearest compositions and create cluster
-	
-	# Find average formation energy for the cluster and set this value to the glasses data's formation energy
+	# Convert raw data into something usuable for the kNN method
+	feature_calculators = [cf.Stoichiometry(), cf.ElementProperty.from_preset("magpie"), \
+		cf.ValenceOrbital(props=['frac']), cf.IonProperty()]
+		
+	# Build that data as 'features'. You need to have Magpie for this, you can clone it using the following command:
+	# git clone https://bitbucket.org/wolverton/magpie.git
+	# This will clone magpie into the directory you're currently working in. I used gradle to build after this.
+	# Once you get gradle, you just navigate into the magpie folder and type the command 'gradlew jar' on Windows.
 
+	feature_labels = list(itertools.chain.from_iterable([x.feature_labels() for x in feature_calculators]))
+	
+	for fc in feature_calculators:
+		oqmd_data = fc.featurize_dataframe(oqmd_data, col_id='composition_pmg')
+		glass_data = fc.featurize_dataframe(glass_data, col_id='composition')
+		
+	print(oqmd_data)
+	print()
+	print(glass_data)
+	
+	# SET UP SOME ML
+	num_neighbors = 10
+	
+	neigh = KNeighborsRegressor(n_neighbors=num_neighbors)
+	# Feed in data as X,y, where X = training data and y = target values and fit the model
+	neigh.fit(glass_data, oqmd_data) 
+	
 	
 	
 def get_data(entry):
