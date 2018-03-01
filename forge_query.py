@@ -8,7 +8,7 @@ import itertools
 from pymatgen import Composition
 from pymatgen.core.periodic_table import Element
 from sklearn import metrics
-from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import NearestNeighbors, KNeighborsRegressor
 
 def main():
 	# Read in dataset
@@ -18,9 +18,8 @@ def main():
 	# Make the compositions of the glasses data into pymatgen objects to match the data from OQMD
 	# Convert data into pandas dataframe
 	glass_data = pd.DataFrame(data = glass_data, columns=['composition'])
-	# Convert compositions to pymatgen objects. Use 1 of the 2 following lines? Not sure.
-	glass_data['composition_pmg'] = glass_data['composition'].apply(lambda x: Composition(x))
-	#glass_data["composition_pmg"] = str_to_composition(glass_data["composition"])
+	# Convert compositions to pymatgen objects.
+	glass_data["composition_pmg"] = str_to_composition(glass_data["composition"])
 
 	# Set up forge
 	mdf = Forge()
@@ -38,51 +37,42 @@ def main():
 	# Get composition of alloys and enthalpy of formation
 	oqmd_data['composition'], oqmd_data['delta_e'], oqmd_data['energy'] = list(zip(*[get_data(x) for x in result_records]))
 	
-	# Convert compositions to pymatgen objects, use 1 of the following 2 lines?
-	#oqmd_data['composition_pmg'] = oqmd_data['composition'].apply(lambda x: Composition(x))
+	# Convert compositions to pymatgen objects
 	oqmd_data["composition_pmg"] = str_to_composition(oqmd_data["composition"]) 
 	
-	# Remove results from memory for better efficiency
-	del result_records
+	# Remove results from memory
+	#del result_records
 	
 	# Remove compounds without delta E
 	for k in ['delta_e', 'energy']:
 		oqmd_data[k] = pd.to_numeric(oqmd_data[k])
-		
-	# Remove compounds w/o delta E
 	oqmd_data = oqmd_data[~ np.logical_or(oqmd_data['delta_e'].isnull(), oqmd_data['energy'].isnull())]
 		
 	# Keep only the ground state of each composition
 	oqmd_data['composition_str'] = oqmd_data['composition_pmg'].apply(lambda x: x.reduced_formula)
 	oqmd_data.sort_values('energy', ascending=True, inplace=True)
 	oqmd_data.drop_duplicates('composition_str', keep='first', inplace=True)
-	
-	print("We've made it this far")
 		
-	# Convert raw data into something usuable for the kNN method
-	feature_calculators = [cf.Stoichiometry(), cf.ElementProperty.from_preset("magpie")]
-		
-	# Build that data as 'features'. 
-	feature_labels = list(itertools.chain.from_iterable([x.feature_labels() for x in feature_calculators]))
+	# Feed in data as X,y, where X = training data and y = target values and fit the model. 
+	# Use matminer to featurize the composition data. Returns a pandas array with element fraction of each element 
+	# in a column, 0's in the rest. In this particular data frame, the matrix starts at column 6, so that's the chunk I take
+	# a few lines down.
+	oqmd_comp = cf.ElementFraction().featurize_dataframe(oqmd_data, "composition_pmg")
+	oqmd_comp = oqmd_comp.as_matrix()
+	oqmd_comp = oqmd_comp[:,6:]
+	oqmd_energy = oqmd_data['energy'].values.reshape(-1, 1)
 	
-	for fc in feature_calculators:
-		oqmd_data = fc.featurize_dataframe(oqmd_data, col_id='composition_pmg')
-		glass_data = fc.featurize_dataframe(glass_data, col_id='composition_pmg')
+	# Featurize the glass data in the same way as the oqmd data.
+	glass_comp = cf.ElementFraction().featurize_dataframe(glass_data, "composition_pmg")
+	glass_comp = glass_comp.as_matrix()
+	glass_comp = glass_comp[:,2:]
 	
-	# Remove any NaN's or things with infinite entries
-	oqmd_data = oqmd_data[~ oqmd_data[feature_labels].isnull().any(axis=1)]
-					
 	# SET UP SOME ML
 	num_neighbors = 10
 	neigh = NearestNeighbors(n_neighbors=num_neighbors)
 	
-	# Feed in data as X,y, where X = training data and y = target values and fit the model. 
-	# Use pandas df.values to convert to np array
-	# This line works don't delete it
-	#X = oqmd_data[feature_labels]
-	X = [oqmd_data['composition_pmg'], oqmd_data['delta_e']]
-	y = glass_data['composition_pmg'].values
-	neigh.fit(X, y) 
+	model = neigh.fit(oqmd_comp, oqmd_energy) 
+	kNearestComps = model.kneighbors(glass_comp)
 	
 	
 	
