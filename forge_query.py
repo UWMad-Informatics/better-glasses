@@ -9,10 +9,13 @@ from pymatgen import Composition
 from pymatgen.core.periodic_table import Element
 from sklearn import metrics
 from sklearn.neighbors import NearestNeighbors, KNeighborsRegressor
+import time
 
 def main():
+	start = time.time()
+	
 	# Read in dataset
-	filepath = "C:\\Users\\mvane\\Documents\\GitHub\\better-glasses\\formulas_subset.csv"
+	filepath = "C:\\Users\\mvane\\Documents\\GitHub\\better-glasses\\formulas.csv"
 	glass_data = pd.read_csv(filepath)
 	glass_data = glass_data['composition']
 	# Make the compositions of the glasses data into pymatgen objects to match the data from OQMD
@@ -28,7 +31,7 @@ def main():
 	# Note: Advanced args (match field or source) cleared when we call search(), so add reset_query = false to keep matches
 	# Note: Use mdf.aggregate() if we need to retrieve > 10000 results from OQMD
 	result_records = mdf.aggregate('mdf.source_name:oqmd AND (oqmd.configuration:static OR oqmd.configuration:standard) ' + 
-		'AND oqmd.converged:True AND mdf.scroll_id:<10000')
+		'AND oqmd.converged:True') #AND mdf.scroll_id:<10000'
 	print('Found %d compounds'%len(result_records))
 
 	# Convert results into pandas dataframe and get lowest energy compound at each composition
@@ -69,10 +72,14 @@ def main():
 	
 	# SET UP SOME ML
 	num_neighbors = 10
-	neigh = NearestNeighbors(n_neighbors=num_neighbors)
+	neigh = KNeighborsRegressor(n_neighbors=num_neighbors)
 	
 	model = neigh.fit(oqmd_comp, oqmd_energy) 
-	kNearestComps = model.kneighbors(glass_comp)
+	kNearestEnergies = model.predict(glass_comp)
+	print(kNearestEnergies)
+	np.savetxt("KNearestEnergies", kNearestEnergies, header="Energy (eV)")
+	end = time.time()
+	print("Run Time: " + str(end - start))
 	
 	
 	
