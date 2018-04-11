@@ -68,8 +68,10 @@ def main():
 	# Featurize the glass data in the same way as the oqmd data. 
 	glass_comp = cf.ElementFraction().featurize_dataframe(glass_data, "composition_pmg")
 	glass_comp = glass_comp.as_matrix()
-	glass_comp = glass_comp[:,2:]
 	glass_comp_str = glass_comp[:,:1]
+	glass_comp_str = glass_comp_str.flatten
+	glass_comp = glass_comp[:,2:]
+	
 	
 	# SET UP SOME ML
 	# Use 1 nearest neighbor to get closest energy
@@ -79,10 +81,12 @@ def main():
 	# Fit the model with OQMD data, then predict the one nearest formation energy for comps in the glasses dataset
 	model = neigh.fit(oqmd_comp, oqmd_energy) 
 	kNearestEnergies = model.predict(glass_comp)
+	kNearestEnergies = kNearestEnergies.flatten
 	
+	output = np.stack(glass_comp_str, kNearestEnergies)
+
 	# Save the output of the model as a csv
-	np.savetxt(str(num_neighbors) + "NearestEnergies", zip(glass_comp_str,kNearestEnergies), header="Energy (eV)")
-	np.savetxt("Compositions", glass_comp_str, header="Composition")
+	np.savetxt(str(num_neighbors) + "NearestEnergies and Compositions", output, header="Composition, Energy (eV)", delimiter=",", fmt="%s")
 
 	end = time.time()
 	print("Run Time: " + str(end - start))
