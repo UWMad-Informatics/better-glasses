@@ -8,6 +8,7 @@ with open(filename) as file:
     all_data = json.load(file)
 
 Tg_x = []
+print(type(Tg_x))
 Tg_y = []
 Tg_y_err = []
 Tl_x = []
@@ -54,14 +55,15 @@ Tx_y_err = np.asarray(Tx_y_err)
 
 # Calculate Trg (=Tg/Tl) and the standard deviation & mean of Tg and Tl
 calc_Trg = Tg_y/Tl_y
-calc_Trg_err = []
-stdev_Tg = np.std(Tg_x)
+calc_Trg_err = 0
+stdev_Tg = np.std(Tg_y)
 stdev_Tl = np.std(Tl_y)
-mean_Tg = np.mean(Tg_x)
-mean_Tl = np.mean(Tl_x)
+mean_Tg = np.mean(Tg_y)
+mean_Tl = np.mean(Tl_y)
 covar_Tg_Tl = 0
 
-for val in range(0, len(calc_Trg)):
-    error_calc = calc_Trg[val]*math.sqrt(math.pow(Tg_y_err[val], 2) + math.pow(Tl_y_err[val], 2)
-                                         - (2*covar_Tg_Tl)/(Tg_y[val]*Tl_y[val]))
-    calc_Trg_err.extend(error_calc)
+#for val in range(0, len(calc_Trg)):
+#    error_calc = calc_Trg[val]*math.sqrt(math.pow(Tg_y_err[val]/Tg_y[val], 2) + math.pow(Tl_y_err[val]/Tl_y[val], 2)
+#                                         - (2*covar_Tg_Tl)/(Tg_y[val]*Tl_y[val]))
+#    print(error_calc)
+#    calc_Trg_err.extend(error_calc)
