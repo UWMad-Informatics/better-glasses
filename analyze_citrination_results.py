@@ -3,12 +3,13 @@ import numpy as np
 import math
 
 # Read in json file from obtained using citrination_retrieve_predicted_vals
-filename = "/Users/vanessa/Documents/GitHub/better-glasses/PredictedValuesFromCitrination.txt"
+# "/Users/vanessa/Documents/GitHub/better-glasses/PredictedValuesFromCitrination.txt"
+filename = "C:/Users/mvane/Documents/GitHub/better-glasses/PredictedValuesFromCitrination.txt"
 with open(filename) as file:
-    all_data = json.load(file)
+	all_data = json.load(file)
 
+# Make lists to hold values later
 Tg_x = []
-print(type(Tg_x))
 Tg_y = []
 Tg_y_err = []
 Tl_x = []
@@ -19,28 +20,29 @@ Tx_y = []
 Tx_y_err = []
 
 for property in range(0, len(all_data['reports'][0])):
-    # Retrieve the x value (actual property value), y value (predicted property value), and the error in the prediction
-    # Current file is in order Tx, log(Rc), gamma, omega, Tg, Tl, Trg
-    model = all_data['reports'][property]['modelName']
-    x = (all_data['reports'][property]['performancePlots'][0]['data'][0]['x'])
-    y = (all_data['reports'][property]['performancePlots'][0]['data'][0]['y'])
-    err_y = (all_data['reports'][property]['performancePlots'][0]['data'][0]['error_y'])
+	# Retrieve the x value (actual property value), y value (predicted property value), and the error in the prediction
+	# Current file is in order Tx, log(Rc), gamma, omega, Tg, Tl, Trg
+	model = all_data['reports'][property]['modelName']
+	x = (all_data['reports'][property]['performancePlots'][0]['data'][0]['x'])
+	y = (all_data['reports'][property]['performancePlots'][0]['data'][0]['y'])
+	y_err = (all_data['reports'][property]['performancePlots'][0]['data'][0]['error_y'])
 
-    # Save each x, y, and y_err value for the materials properties
-    if model == "Tg":
-        Tg_x = x
-        Tg_y = y
-        Tg_y_err = y_err
-    elif model == "Tl":
-        Tl_x = x
-        Tl_y = y
-        Tl_y_err = y_err
-    elif model == "Tx":
-        Tx_x = x
-        Tx_y = y
-        Tx_y_err = y_err
-    else:
-        pass
+	# Save each x, y, and y_err value for the materials properties
+	if model == "Property Tg":
+		Tg_x = x
+		print(Tg_x)
+		Tg_y = y
+		Tg_y_err = y_err
+	elif model == "Property Tl":
+		Tl_x = x
+		Tl_y = y
+		Tl_y_err = y_err
+	elif model == "Property Tx":
+		Tx_x = x
+		Tx_y = y
+		Tx_y_err = y_err
+	else:
+		pass
 
 # Convert the lists of materials properties to np arrays
 Tg_x = np.asarray(Tg_x)
@@ -63,7 +65,7 @@ mean_Tl = np.mean(Tl_y)
 covar_Tg_Tl = 0
 
 #for val in range(0, len(calc_Trg)):
-#    error_calc = calc_Trg[val]*math.sqrt(math.pow(Tg_y_err[val]/Tg_y[val], 2) + math.pow(Tl_y_err[val]/Tl_y[val], 2)
-#                                         - (2*covar_Tg_Tl)/(Tg_y[val]*Tl_y[val]))
-#    print(error_calc)
-#    calc_Trg_err.extend(error_calc)
+#	error_calc = calc_Trg[val]*math.sqrt(math.pow(Tg_y_err[val]/Tg_y[val], 2) + math.pow(Tl_y_err[val]/Tl_y[val], 2)
+#										 - (2*covar_Tg_Tl)/(Tg_y[val]*Tl_y[val]))
+#	print(error_calc)
+#	calc_Trg_err.extend(error_calc)
