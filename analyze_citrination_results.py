@@ -4,7 +4,7 @@ import math
 
 # Read in json file from obtained using citrination_retrieve_predicted_vals
 # "/Users/vanessa/Documents/GitHub/better-glasses/PredictedValuesFromCitrination.txt"
-filename = "C:/Users/mvane/Documents/GitHub/better-glasses/PredictedValuesFromCitrination.txt"
+filename = "C:/Users/mvane/Documents/GitHub/better-glasses/predictions_4291.txt"
 with open(filename) as file:
 	all_data = json.load(file)
 
@@ -19,13 +19,14 @@ Tx_x = []
 Tx_y = []
 Tx_y_err = []
 
-for property in range(0, len(all_data['reports'][0])):
+for property in range(0, len(all_data['candidates'][0])):
 	# Retrieve the x value (actual property value), y value (predicted property value), and the error in the prediction
 	# Current file is in order Tx, log(Rc), gamma, omega, Tg, Tl, Trg
-	model = all_data['reports'][property]['modelName']
-	x = (all_data['reports'][property]['performancePlots'][0]['data'][0]['x'])
-	y = (all_data['reports'][property]['performancePlots'][0]['data'][0]['y'])
-	y_err = (all_data['reports'][property]['performancePlots'][0]['data'][0]['error_y'])
+	model = all_data['candidates'][0]['Property Tg']
+	print(model)
+	#x = (all_data['candidates'][property]['performancePlots'][0]['data'][0]['x'])
+	#y = (all_data['candidates'][property]['performancePlots'][0]['data'][0]['y'])
+	#y_err = (all_data['candidates'][property]['performancePlots'][0]['data'][0]['error_y'])
 
 	# Save each x, y, and y_err value for the materials properties
 	if model == "Property Tg":
