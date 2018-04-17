@@ -26,27 +26,28 @@ def main():
 	inputs = []
 	for i in range(0, len(formula)):
 		inputs.append({form: formula[i], property: energy[i]})
-	print(inputs)
 		
 	# Make predictions of Tg, Tx, and Tl
-	model_num = "4291"
+	model_num = "4366"
 	predictions = client.predict(model_num, inputs)
+	
+	print(predictions['candidates'][0]['Property Tg'])
 	
 	# Write all predictions to json file
 	with open('full_predictions_' + str(model_num) + ".txt", 'w') as outfile:
 		json.dump(predictions, outfile)
 		
-	# Write what we care about to a csv
-	formula_p = predictions['candidates'][0]['formula']
-	tg_p = predictions['candidates'][0]['Property Tg']
-	tl_p = predictions['candidates'][0]['Property Tl']
-	tx_p = predictions['candidates'][0]['Property Tx']
-	values = zip(formula_p, tg_p, tl_p, tx_p)
+	# # Write what we care about to a csv
+	# formula_p = predictions['candidates'][0]['formula']
+	# tg_p = predictions['candidates'][0]['Property Tg']
+	# tl_p = predictions['candidates'][0]['Property Tl']
+	# tx_p = predictions['candidates'][0]['Property Tx']
+	# values = zip(formula_p, tg_p, tl_p, tx_p)
 	
-	with open('predictions_' + str(model_num) + ".csv", 'wb') as csvout:
-		wr = csv.writer(csvout)
-		for row in values:
-			wr.writerow(row)
+	# with open('predictions_' + str(model_num) + ".csv", 'wb') as csvout:
+		# wr = csv.writer(csvout)
+		# for row in values:
+			# wr.writerow(row)
 
 		
 # Run the script:
