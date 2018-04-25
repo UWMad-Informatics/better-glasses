@@ -21,7 +21,7 @@ def main():
 	# Convert formulas to dictionary one at a time and make predictions. Export each to their own json.	
 	for i in range(0, len(formula)):
 		input = {form: formula[i], property: energy[i]}
-		# Make predictions of Tg, Tx, and Tl. These will also contain many of the Magpie descriptors used to train the model
+		# Make predictions of Tg, Tx, and Tl. (These will also contain many of the Magpie descriptors used to train the model)
 		model_num = "4416"
 		predictions = client.predict(model_num, input)
 	
@@ -30,7 +30,7 @@ def main():
 		folder_out = "C:/Users/mvane/Documents/GitHub/better-glasses/predictions_output/"
 		with open(folder_out + str(formula[i]) + ".txt", 'w') as outfile:
 			json.dump(predictions, outfile)
-	
+		outfile.close()	
 		
 # Run the script:
 if __name__ == '__main__':
