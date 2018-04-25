@@ -17,20 +17,20 @@ def main():
 	formula = exp_data['formula'].as_matrix()
 	energy = exp_data['PROPERTY: Nearest DFT Formation Energy (eV)'].as_matrix()
 	form = "formula"
-	property = "Nearest DFT Formation Energy (eV)"
-	# Convert formulas to dictionary
-	inputs = []
+	property = "Property Nearest DFT Formation Energy"
+	# Convert formulas to dictionary one at a time and make predictions. Export each to their own json.	
 	for i in range(0, len(formula)):
-		inputs.append({form: formula[i], property: energy[i]})
-		
-	# Make predictions of Tg, Tx, and Tl. These will also contain many of the Magpie descriptors used to train the model
-	model_num = "4367"
-	predictions = client.predict(model_num, inputs)
+		input = {form: formula[i], property: energy[i]}
+		# Make predictions of Tg, Tx, and Tl. These will also contain many of the Magpie descriptors used to train the model
+		model_num = "4416"
+		predictions = client.predict(model_num, input)
 	
-	# Write all these predictions to json file
-	with open('predictions_' + str(model_num) + ".txt", 'w') as outfile:
-		json.dump(predictions, outfile)
-
+		# Write all these predictions to json files
+		# Folder path:
+		folder_out = "C:/Users/mvane/Documents/GitHub/better-glasses/predictions_output/"
+		with open(folder_out + str(formula[i]) + ".txt", 'w') as outfile:
+			json.dump(predictions, outfile)
+	
 		
 # Run the script:
 if __name__ == '__main__':

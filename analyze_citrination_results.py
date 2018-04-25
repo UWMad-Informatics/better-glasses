@@ -1,61 +1,118 @@
 import json
+import os
 import numpy as np
 import math
+import pandas as pd
+import csv
+import matplotlib.pyplot as plt
 
 # Read in json file from obtained using citrination_retrieve_predicted_vals
 # "/Users/vanessa/Documents/GitHub/better-glasses/PredictedValuesFromCitrination.txt"
-filename = "C:/Users/mvane/Documents/GitHub/better-glasses/full_predictions_4291.txt"
-with open(filename) as file:
-	all_data = json.load(file)
+filename = "C:/Users/mvane/Documents/GitHub/better-glasses/predictions_4416.txt"
+log_rc_files = "C:/Users/mvane/Documents/Skunkworks/BMG/Data/rc_values.csv"
+actual_values = "C:/Users/mvane/Documents/Skunkworks/BMG/Data/test_for_script.csv"	
 
-# Retrieve the log(Rc) predictions from the JSON
-formulas = []
-log_rc = []
-for i in range(0, len(all_data['candidates'][0])):
-	# Retrieve the x value (actual property value), y value (predicted property value), and the error in the prediction
-	# Current file is in order Tx, log(Rc), gamma, omega, Tg, Tl, Trg
-	formula = all_data['candidates'][i]['Property log Rc']
-	print(model)
+# Make dictionaries of the actual values of the GFA metrics
+# Read in values and make into numpy arrays
+actual_vals = pd.read_csv(actual_values)
+act_form = actual_vals['formula']
+#act_tg = actual_vals['PROPERTY: Tg (K)']
+#act_tl = actual_vals['PROPERTY: Tl (K)']
+#act_tx = actual_vals['PROPERTY: Tx (K)']
+act_trg = actual_vals['PROPERTY: Trg']
+act_gamma = actual_vals['PROPERTY: $\gamma$']
+act_omega = actual_vals['PROPERTY: $\omega$']
 
-	# # Save each x, y, and y_err value for the materials properties
-	# if model == "Property Tg":
-		# Tg_x = x
-		# print(Tg_x)
-		# Tg_y = y
-		# Tg_y_err = y_err
-	# elif model == "Property Tl":
-		# Tl_x = x
-		# Tl_y = y
-		# Tl_y_err = y_err
-	# elif model == "Property Tx":
-		# Tx_x = x
-		# Tx_y = y
-		# Tx_y_err = y_err
-	# else:
-		# pass
+# Remove any NaN and replace with -100 (to flag for values that won't work)
+# Create a matrix with each property in a row for each formula
+all_act_props = [act_trg, act_gamma, act_omega]
 
-# # Convert the lists of materials properties to np arrays
-# Tg_x = np.asarray(Tg_x)
-# Tg_y = np.asarray(Tg_y)
-# Tg_y_err = np.asarray(Tg_y_err)
-# Tl_x = np.asarray(Tl_x)
-# Tl_y = np.asarray(Tl_y)
-# Tl_y_err = np.asanyarray(Tl_y_err)
-# Tx_x = np.asarray(Tx_x)
-# Tx_y = np.asarray(Tx_y)
-# Tx_y_err = np.asarray(Tx_y_err)
+for property in all_act_props:
+	for i in range(0, len(act_form)):
+		if math.isnan(property[i]):
+			property[i] = -100
+		else:
+			pass
 
-# # Calculate Trg (=Tg/Tl) and the standard deviation & mean of Tg and Tl
-# calc_Trg = Tg_y/Tl_y
-# calc_Trg_err = 0
-# stdev_Tg = np.std(Tg_y)
-# stdev_Tl = np.std(Tl_y)
-# mean_Tg = np.mean(Tg_y)
-# mean_Tl = np.mean(Tl_y)
-# covar_Tg_Tl = 0
+# Make a dictionary to hold all of the values later
+values_dict = {}
+# Zip together the lists we're trying to use as values in the dictionary
+all_act_props = zip(act_trg, act_gamma, act_omega)
+# Turn the zip object into a list because apparently zip objects can't do anything useful
+all_act_props = list(all_act_props)
 
-#for val in range(0, len(calc_Trg)):
-#	error_calc = calc_Trg[val]*math.sqrt(math.pow(Tg_y_err[val]/Tg_y[val], 2) + math.pow(Tl_y_err[val]/Tl_y[val], 2)
-#										 - (2*covar_Tg_Tl)/(Tg_y[val]*Tl_y[val]))
-#	print(error_calc)
-#	calc_Trg_err.extend(error_calc)
+for i in range(len(act_form)):
+    values_dict[act_form[i]] = all_act_props[i]
+
+
+# Make arrays to hold the predicted values
+pred_formulas = []
+tg_vals = []
+tl_vals = []
+tx_vals = []
+trg_vals = []
+omega_vals = []
+gamma_vals = []
+
+# Extract the predicted value from the json holding the predictions
+folder_out = "C:/Users/mvane/Documents/GitHub/better-glasses/predictions_output/"
+for pred_json in list(os.listdir(folder_out)):
+	print(pred_json)
+	
+	# Open the predicted values json
+	with open(folder_out + pred_json) as file:
+		all_data = json.load(file)
+		
+	tg_vals.append(all_data['candidates'][0]['Property Tg'])
+	tl_vals.append(all_data['candidates'][0]['Property Tl'])
+	tx_vals.append(all_data['candidates'][0]['Property Tx'])
+	trg_vals.append(all_data['candidates'][0]['Property Trg'])
+	omega_vals.append(all_data['candidates'][0]['Property $\\omega$'])
+	gamma_vals.append(all_data['candidates'][0]['Property $\\gamma$'])
+	pred_formulas.append(all_data['candidates'][0]['formula'])
+	
+
+# Turn the tuple of [prediction, uncertainty] into 2 lists for each temp and for Trg, gamma, and omega
+tg_pred = np.asarray([tg[0] for tg in tg_vals])
+tl_pred = np.asarray([tl[0] for tl in tl_vals])
+tx_pred = np.asarray([tx[0] for tx in tx_vals])
+trg_pred = np.asarray([trg[0] for trg in trg_vals])
+omega_pred = np.asarray([omega[0] for omega in omega_vals])
+gamma_pred = np.asarray([gamma[0] for gamma in gamma_vals])
+pred_form = np.asarray([form[0] for form in pred_formulas])
+
+temp_form = []
+for f in pred_form:
+	f_str = str(f)
+	temp_form.append(f_str)
+pred_form = temp_form	
+
+tg_pred_err = np.asarray([tg[1] for tg in tg_vals])
+tl_pred_err = np.asarray([tl[1] for tl in tl_vals])
+tx_pred_err = np.asarray([tx[1] for tx in tx_vals])
+
+# Check if the formulas are in the same order
+for i in range(0, len(act_form)):
+	if str(act_form[i]) == str(pred_form[i]):
+		print("OK!")
+	else:
+		print("OH NOOOOOOOO!")
+		print(act_form[i])
+		print(pred_form[i])
+
+# Calculate GFA metrics using the predicted values
+trg_calc = tg_pred/tl_pred
+gamma_calc = tg_pred/(tx_pred + tl_pred)
+omega_calc = (tg_pred/tx_pred) - 2*(tg_pred/(tg_pred + tl_pred))
+plt.figure()
+plt.scatter(trg_pred, trg_calc, color = 'b')
+#ax.scatter(trg_actual, trg_pred, color = 'r', marker = '^')
+
+plt.title("Trg")
+plt.xlabel("Actual Trg Value")
+plt.ylabel("Calculated Trg Value")
+plt.xlim([np.amin(trg_pred) + .1*(np.amax(trg_pred) - np.amin(trg_pred)), np.amax(trg_pred) + .1*(np.amax(trg_pred) - np.amin(trg_pred))])
+plt.ylim([trg_calc.min(), trg_calc.max()])
+
+plt.show()
+		
