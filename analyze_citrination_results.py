@@ -9,15 +9,12 @@ import matplotlib
 from sklearn.metrics import mean_squared_error
 
 # Read in actual values collected from extracting data.
-actual_values = "C:/Users/mvane/Documents/Skunkworks/BMG/Data/test_for_script.csv"	
+actual_values = "C:/Users/mvane/Documents/Skunkworks/BMG/Data/BMG_full_dataset_with_energies - Copy.csv"	
 
 # Make dictionaries of the actual values of the GFA metrics
 # Read in values and make into numpy arrays
 actual_vals = pd.read_csv(actual_values)
 act_form = actual_vals['formula']
-#act_tg = actual_vals['PROPERTY: Tg (K)']
-#act_tl = actual_vals['PROPERTY: Tl (K)']
-#act_tx = actual_vals['PROPERTY: Tx (K)']
 act_trg = actual_vals['PROPERTY: Trg'].as_matrix()
 act_gamma = actual_vals['PROPERTY: $\gamma$'].as_matrix()
 act_omega = actual_vals['PROPERTY: $\omega$'].as_matrix()
@@ -101,7 +98,7 @@ else:
 
 # Calculate GFA metrics using the predicted values
 trg_calc = tg_pred/tl_pred
-gamma_calc = tg_pred/(tx_pred + tl_pred)
+gamma_calc = tx_pred/(tg_pred + tl_pred)
 omega_calc = (tg_pred/tx_pred) - 2*(tg_pred/(tg_pred + tl_pred))
 
 # Filter out any actual values of -100 (which was set earlier to flag places w/o a value)
