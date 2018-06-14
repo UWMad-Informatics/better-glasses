@@ -44,7 +44,7 @@ def main():
 				row.append('Formula')
 				for k in keys:
 					row.append(k)
-					row.append('Uncertainty')
+					row.append(str(k) + ' Uncertainty')
 				writer.writerow(row)
 				first = False
 			row = []
