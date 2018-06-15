@@ -6,7 +6,6 @@ import requests
 import datetime
 import pandas as pd
 from citrination_client.client import CitrinationClient
-from citrination_client.util.quote_finder import quote
 
 def main():
 	# Set up client
@@ -59,6 +58,7 @@ def main():
 			writer.writerow(row)
 
 	csvfile.close()
+		
 		
 # Run the script:
 if __name__ == '__main__':
