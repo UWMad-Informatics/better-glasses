@@ -113,12 +113,12 @@ def click_save(my_url):
 	# Email
 	google = driver.find_element_by_xpath('/html/body/div[2]/div[3]/div/div[2]/div[1]/a').click()
 	wait = WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.XPATH, '//*[@id="identifierId"]')))
-	email = driver.find_element_by_xpath('//*[@id="identifierId"]').send_keys('vmeschke@wisc.edu')
+	email = driver.find_element_by_xpath('//*[@id="identifierId"]').send_keys('email')
 	driver.find_element_by_xpath('//*[@id="identifierNext"]/content/span').click()
 	# Password on MyUW login
 	driver.implicitly_wait(10)
-	password = driver.find_element_by_xpath('//*[@id="j_username"]').send_keys("vmeschke")
-	password = driver.find_element_by_xpath('//*[@id="j_password"]').send_keys("***REMOVED***")
+	password = driver.find_element_by_xpath('//*[@id="j_username"]').send_keys("id")
+	password = driver.find_element_by_xpath('//*[@id="j_password"]').send_keys("password")
 	driver.find_element_by_xpath('//*[@id="loginForm"]/div[3]/div/button').click()
 	
 	# Click the save button to trigger model retrain in data views
