@@ -109,22 +109,40 @@ def click_save(my_url):
 	# Select access type. This is open access xpath.
 	open_access = driver.find_element_by_xpath('/html/body/div[2]/div[3]/div/div[2]/div/div[2]/span[1]').click()
 	
-	# Sign in with Google
-	# Email
-	google = driver.find_element_by_xpath('/html/body/div[2]/div[3]/div/div[2]/div[1]/a').click()
-	wait = WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.XPATH, '//*[@id="identifierId"]')))
-	email = driver.find_element_by_xpath('//*[@id="identifierId"]').send_keys('vmeschke@wisc.edu')
-	driver.find_element_by_xpath('//*[@id="identifierNext"]/content/span').click()
-	# Password on MyUW login
-	driver.implicitly_wait(10)
-	password = driver.find_element_by_xpath('//*[@id="j_username"]').send_keys("vmeschke")
-	password = driver.find_element_by_xpath('//*[@id="j_password"]').send_keys("D47zzxqx")
-	driver.find_element_by_xpath('//*[@id="loginForm"]/div[3]/div/button').click()
+	# Sign in
+	sign_in(driver, "vmeschke@wisc.edu", "vmeschke", environ["UW_PASSWORD"])
 	
 	# Click the save button to trigger model retrain in data views
 	driver.implicitly_wait(10)
 	button = driver.find_element_by_xpath("/html/body/div/div[3]/div[2]/div[1]/div/div[3]/div/button").click()
 	driver.close()
+	
+
+def sign_in(driver, email, id, password):
+	"""
+	Method to login to Citrination using a UW email.
+	
+	:param driver: Selenium web driver
+	:type driver: Selenium web driver
+	:param email: email address
+	:type email: str
+	:param id: UW NetID
+	:type id: str
+	:param password: UW password
+	:type password: str
+	"""
+	# Sign in with Google
+	# Email
+	google = driver.find_element_by_xpath('/html/body/div[2]/div[3]/div/div[2]/div[1]/a').click()
+	wait = WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.XPATH, '//*[@id="identifierId"]')))
+	email = driver.find_element_by_xpath('//*[@id="identifierId"]').send_keys(email)
+	driver.find_element_by_xpath('//*[@id="identifierNext"]/content/span').click()
+	# Password on MyUW login
+	driver.implicitly_wait(10)
+	id = driver.find_element_by_xpath('//*[@id="j_username"]').send_keys(id)
+	password = driver.find_element_by_xpath('//*[@id="j_password"]').send_keys(password)
+	driver.find_element_by_xpath('//*[@id="loginForm"]/div[3]/div/button').click()
+	
 	
 def wait_for_train(my_url):
 	"""
@@ -140,16 +158,8 @@ def wait_for_train(my_url):
 	# Select access type. This is open access xpath.
 	open_access = driver.find_element_by_xpath('/html/body/div[2]/div[3]/div/div[2]/div/div[2]/span[1]').click()
 	
-	# Sign in with Google
-	# Email
-	google = driver.find_element_by_xpath('/html/body/div[2]/div[3]/div/div[2]/div[1]/a').click()
-	email = driver.find_element_by_xpath('//*[@id="identifierId"]').send_keys('email')
-	driver.find_element_by_xpath('//*[@id="identifierNext"]/content/span').click()
-	# Password on MyUW login
-	driver.implicitly_wait(10)
-	password = driver.find_element_by_xpath('//*[@id="j_username"]').send_keys("username")
-	password = driver.find_element_by_xpath('//*[@id="j_password"]').send_keys("password")
-	driver.find_element_by_xpath('//*[@id="loginForm"]/div[3]/div/button').click()
+	# Sign in
+	sign_in(driver, "vmeschke@wisc.edu", "vmeschke", str(environ["UW_PASSWORD"]))
 	
 	# Wait until a DataView is done training by checking for the spinning circle 
 	waiting = True
