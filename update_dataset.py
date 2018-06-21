@@ -143,7 +143,6 @@ def sign_in(driver, email, id, password):
 	password = driver.find_element_by_xpath('//*[@id="j_password"]').send_keys(password)
 	driver.find_element_by_xpath('//*[@id="loginForm"]/div[3]/div/button').click()
 	
-	
 def wait_for_train(my_url):
 	"""
 	Method to wait for a DataView to finish training after retriggering a model retrain.

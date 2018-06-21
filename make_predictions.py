@@ -3,16 +3,15 @@ import sys
 import datetime
 import csv
 import requests
-import datetime
 import pandas as pd
-from citrination_client.client import CitrinationClient
+from citrination_client import CitrinationClient
 
 def main():
 	# Set up client
 	client = CitrinationClient(os.environ["CITRINATION_API_KEY"], 'https://citrination.com')
 	
 	# Read in experimental data
-	filename = "C:/Users/mvane/Documents/Skunkworks/BMG/Data/BMG_full_dataset_with_energies.csv"
+	filename = "testing_data.csv"#"C:/Users/mvane/Documents/Skunkworks/BMG/Data/BMG_full_dataset_with_energies.csv"
 	exp_data = pd.read_csv(filename)
 	formula = exp_data['formula'].as_matrix()
 	energy = exp_data['PROPERTY: Nearest DFT Formation Energy (eV)'].as_matrix()
@@ -24,14 +23,14 @@ def main():
 		input.append({form: formula[i], property: energy[i]})
 	
 	# Make predictions of Tg, Tx, and Tl. (These will also contain many of the Magpie descriptors used to train the model)
-	model_num = "4416"
+	model_num = "4743"
 	predictions = client.predict(model_num, input)
 	
 	# Write all these predictions to json files with date and time to differentiate predictions.
 	# Folder path:
 	folder_out = "C:/Users/mvane/Documents/GitHub/better-glasses/predictions_output.csv"
 	first = True
-	# Make CSV writer
+	# Make CSV writer. 
 	with open(folder_out, 'w', newline='') as csvfile:
 		writer = csv.writer(csvfile)
 		# Go through every prediction that we made from the chemical formula
