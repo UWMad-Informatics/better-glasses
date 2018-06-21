@@ -14,6 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 def main():
+	start_time = time.time()
 	# Create instance of the client
 	client = CitrinationClient(environ["CITRINATION_API_KEY"], 'https://citrination.com')
 	# dataset_id is the id of the dataset you want to upload new data to
@@ -44,17 +45,35 @@ def main():
 		els = [list(x) for x in itertools.combinations(indices, i)]
 		combos.extend(els)
 	
+	del combos[0]
 	# Loop through each combo of the indices for training
 	for c in combos:
 		print(c)
+		
+		# for each index in the combination of training indices
+		input = []
+		for i in c:
+			# Convert to pif and store pif in JSON
+			input.append([form[i], energy[i], tg[i]])
+		print(input)
+		# Write to CSV and pass the csv file path to make_pif
+		with open("training_data.csv", 'w', newline='') as training_csv:
+			writer = csv.writer(training_csv)
+			writer.writerow(['formula', 'PROPERTY: Nearest DFT Formation Energy (eV)', 'PROPERTY: Tg (K)'])
+			for i in range(0, len(input)):
+				writer.writerow(input[i])
+		training_csv.close()
+		pif_output = make_pif("training_data.csv")
+		# Upload data. Params are (dataset id, file path (local))
+		client.data.upload(dataset_id, pif_output)
+		
 		click_save(url)
-		#time.sleep(240)
 		
 		# Wait for model to retrain
 		model_report_url = 'https://citrination.com/data_views/' + str(dataview_id) + '/data_summary'
 		wait_for_train(model_report_url)
+		
 		# Make predictions and store them to a CSV
-		# Write to CSV and pass the csv file path to make_pif
 		# Make copies of the lists of all indices so we can remove the training indices
 		pred_form = form[:].tolist()
 		pred_energy = energy[:].tolist()
@@ -64,6 +83,7 @@ def main():
 			del pred_energy[i]
 			del pred_tg[i]
 		
+		# Write the formula and energy of the points to predict to a CSV
 		predict_data_file = "testing_data.csv"
 		with open(predict_data_file, 'w', newline='') as testing_csv:
 			writer = csv.writer(testing_csv)
@@ -71,7 +91,11 @@ def main():
 			for i in range(0, len(pred_form)):
 				writer.writerow([pred_form[i], pred_energy[i]])
 		testing_csv.close()
+		
+		# Predict the Tg, Tl, Tx of these data points
 		make_predictions(client, predict_data_file, str(dataview_id))
+	
+	print("Run time: " + str(time.time() - start_time))
 
 def click_save(my_url):
 	"""
@@ -119,12 +143,12 @@ def wait_for_train(my_url):
 	# Sign in with Google
 	# Email
 	google = driver.find_element_by_xpath('/html/body/div[2]/div[3]/div/div[2]/div[1]/a').click()
-	email = driver.find_element_by_xpath('//*[@id="identifierId"]').send_keys('vmeschke@wisc.edu')
+	email = driver.find_element_by_xpath('//*[@id="identifierId"]').send_keys('email')
 	driver.find_element_by_xpath('//*[@id="identifierNext"]/content/span').click()
 	# Password on MyUW login
 	driver.implicitly_wait(10)
-	password = driver.find_element_by_xpath('//*[@id="j_username"]').send_keys("vmeschke")
-	password = driver.find_element_by_xpath('//*[@id="j_password"]').send_keys("***REMOVED***")
+	password = driver.find_element_by_xpath('//*[@id="j_username"]').send_keys("username")
+	password = driver.find_element_by_xpath('//*[@id="j_password"]').send_keys("password")
 	driver.find_element_by_xpath('//*[@id="loginForm"]/div[3]/div/button').click()
 	
 	# Wait until a DataView is done training by checking for the spinning circle 
