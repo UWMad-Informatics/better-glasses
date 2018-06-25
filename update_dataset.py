@@ -20,7 +20,7 @@ def main():
 	# dataset_id is the id of the dataset you want to upload new data to
 	dataset_id = 161880
 	# dataview_id is the DataView you want to update after file upload 
-	dataview_id = 4743
+	dataview_id = 4815
 	# url is the url of the dataview we'd like to click save on.
 	url = 'https://citrination.com/data_views/' + str(dataview_id) + '/ml_config'
 	# Read in new data. For test we are using just chemical formula, DFT energy, and only predicting Tg
@@ -32,6 +32,8 @@ def main():
 	form = new_data['formula']
 	energy = new_data['PROPERTY: Nearest DFT Formation Energy (eV)']
 	tg = new_data['PROPERTY: Tg (K)']
+	tl = new_data['PROPERTY: Tl (K)']
+	tx = new_data['PROPERTY: Tx (K)']
 	
 	# Use itertools to create combinations of the data set to leave out/use for training
 	# Make a list of the indexes of the dataset
@@ -54,17 +56,16 @@ def main():
 		input = []
 		for i in c:
 			# Convert to pif and store pif in JSON
-			input.append([form[i], energy[i], tg[i]])
-		print(input)
+			input.append([form[i], energy[i], tg[i], tl[i], tx[i]])
 		# Write to CSV and pass the csv file path to make_pif
 		with open("training_data.csv", 'w', newline='') as training_csv:
 			writer = csv.writer(training_csv)
-			writer.writerow(['formula', 'PROPERTY: Nearest DFT Formation Energy (eV)', 'PROPERTY: Tg (K)'])
+			writer.writerow(['formula', 'PROPERTY: Nearest DFT Formation Energy (eV)', 'PROPERTY: Tg (K)', 'PROPERTY: Tl (K)', 'PROPERTY: Tx (K)'])
 			for i in range(0, len(input)):
 				writer.writerow(input[i])
 		training_csv.close()
 		pif_output = make_pif("training_data.csv")
-		# Upload data. Params are (dataset id, file path (local))
+		# Upload data. Params are (dataset id, file path)
 		client.data.upload(dataset_id, pif_output)
 		
 		click_save(url)
@@ -188,6 +189,8 @@ def make_pif(filename):
 	form = new_data['formula']
 	energy = new_data['PROPERTY: Nearest DFT Formation Energy (eV)']
 	tg = new_data['PROPERTY: Tg (K)']
+	tl = new_data['PROPERTY: Tl (K)']
+	tx = new_data['PROPERTY: Tx (K)']
 	
 	input = []
 	
@@ -197,7 +200,9 @@ def make_pif(filename):
 		chemical_system.chemical_formula = form[i]
 		dft_energy = Property(name = 'Nearest DFT Formation Energy', units = 'eV', scalars = float(energy[i]))
 		tg_prop = Property(name = 'Tg', units = 'K', scalars = float(tg[i]))
-		chemical_system.properties = [dft_energy, tg_prop]
+		tl_prop = Property(name = 'Tl', units = 'K', scalars = float(tl[i]))
+		tx_prop = Property(name = 'Tx', units = 'K', scalars = float(tx[i]))
+		chemical_system.properties = [dft_energy, tg_prop, tl_prop, tx_prop]
 		input.append(chemical_system)
 	
 	# Dictionary to PIF
