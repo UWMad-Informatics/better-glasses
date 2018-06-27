@@ -57,6 +57,7 @@ def main():
 		for i in c:
 			# Convert to pif and store pif in JSON
 			input.append([form[i], energy[i], tg[i], tl[i], tx[i]])
+		
 		# Write to CSV and pass the csv file path to make_pif
 		with open("training_data.csv", 'w', newline='') as training_csv:
 			writer = csv.writer(training_csv)
@@ -64,7 +65,9 @@ def main():
 			for i in range(0, len(input)):
 				writer.writerow(input[i])
 		training_csv.close()
+		
 		pif_output = make_pif("training_data.csv")
+	
 		# Upload data. Params are (dataset id, file path)
 		client.data.upload(dataset_id, pif_output)
 		
@@ -94,7 +97,21 @@ def main():
 		testing_csv.close()
 		
 		# Predict the Tg, Tl, Tx of these data points
-		make_predictions(client, predict_data_file, str(dataview_id))
+		# Add try, catch to prevent 'candidates' key error
+		err_count = 0
+		try:
+			make_predictions(client, predict_data_file, str(dataview_id))
+		except:
+			err_count+=1
+			while err_count < 10:
+				try:
+					make_predictions(client, predict_data_file, str(dataview_id))
+				except:
+					err_count+=1
+			
+		if err_count > 0:
+			print("Errors encountered with set " + str(c))
+		err_count = 0
 	
 	print("Run time: " + str(time.time() - start_time))
 
@@ -108,6 +125,7 @@ def click_save(my_url):
 	driver = webdriver.Chrome('C:\Program Files\chromedriver')
 	driver.get(my_url)
 	# Select access type. This is open access xpath.
+	wait = WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[3]/div/div[2]/div/div[2]/span[1]')))
 	open_access = driver.find_element_by_xpath('/html/body/div[2]/div[3]/div/div[2]/div/div[2]/span[1]').click()
 	
 	# Sign in
@@ -163,7 +181,7 @@ def wait_for_train(my_url):
 	
 	# Wait until a DataView is done training by checking for the spinning circle 
 	waiting = True
-	time.sleep(60)
+	time.sleep(30)
 	while waiting:
 		try:
 			model_report = driver.find_element_by_xpath('//*[@id="view_data_summary"]/ul/li[2]/a').click()
