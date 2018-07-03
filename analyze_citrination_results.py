@@ -15,9 +15,9 @@ actual_values = "C:/Users/mvane/Documents/Skunkworks/BMG/Data/BMG_full_dataset_w
 # Read in values and make into numpy arrays
 actual_vals = pd.read_csv(actual_values)
 act_form = actual_vals['formula']
-act_trg = actual_vals['PROPERTY: Trg'].as_matrix()
-act_gamma = actual_vals['PROPERTY: $\gamma$'].as_matrix()
-act_omega = actual_vals['PROPERTY: $\omega$'].as_matrix()
+act_trg = actual_vals['PROPERTY: Trg'].values
+act_gamma = actual_vals['PROPERTY: $\gamma$'].values
+act_omega = actual_vals['PROPERTY: $\omega$'].values
 
 # Remove any NaN and replace with -100 (to flag for values that won't work)
 # Create a matrix with each property in a row for each formula
@@ -30,39 +30,16 @@ for property in all_act_props:
 		else:
 			pass
 
-# Make arrays to hold the predicted values
-pred_formulas = []
-tg_vals = []
-tl_vals = []
-tx_vals = []
-trg_vals = []
-omega_vals = []
-gamma_vals = []
-
-# Read in json file from obtained using citrination_retrieve_predicted_vals
-# Extract the predicted value from the json holding the predictions
-folder_out = "C:/Users/mvane/Documents/GitHub/better-glasses/predictions_output/"
-for pred_json in list(os.listdir(folder_out)):	
-	# Open the predicted values json
-	with open(folder_out + pred_json) as file:
-		all_data = json.load(file)
-		
-	tg_vals.append(all_data['candidates'][0]['Property Tg'])
-	tl_vals.append(all_data['candidates'][0]['Property Tl'])
-	tx_vals.append(all_data['candidates'][0]['Property Tx'])
-	trg_vals.append(all_data['candidates'][0]['Property Trg'])
-	omega_vals.append(all_data['candidates'][0]['Property $\\omega$'])
-	gamma_vals.append(all_data['candidates'][0]['Property $\\gamma$'])
-	pred_formulas.append(all_data['candidates'][0]['formula'])
-
-# Turn the tuple of [prediction, uncertainty] into 2 lists for each temp and for Trg, gamma, and omega
-tg_pred = np.asarray([tg[0] for tg in tg_vals])
-tl_pred = np.asarray([tl[0] for tl in tl_vals])
-tx_pred = np.asarray([tx[0] for tx in tx_vals])
-trg_pred = np.asarray([trg[0] for trg in trg_vals])
-omega_pred = np.asarray([omega[0] for omega in omega_vals])
-gamma_pred = np.asarray([gamma[0] for gamma in gamma_vals])
-pred_form = np.asarray([form[0] for form in pred_formulas])
+# Read in csv file from obtained using citrination_retrieve_predicted_vals
+predicted_csv = "C:/Users/mvane/Documents/GitHub/better-glasses/predictions_output.csv"
+predicted_data = pd.read_csv(predicted_csv)
+pred_form = predicted_data['Formula'].values
+tg_pred = predicted_data['Property Tg'].values
+tl_pred = predicted_data['Property Tl'].values
+tx_pred = predicted_data['Property Tx'].values
+trg_pred = predicted_data['Property Trg'].values
+omega_pred = predicted_data['Property $\omega$'].values
+gamma_pred = predicted_data['Property $\gamma$'].values
 
 # Reformat np strings to plain old strings so they can be checked for equality later.
 temp_form = []
@@ -71,10 +48,6 @@ for f in pred_form:
 	temp_form.append(f_str)
 pred_form = temp_form	
 
-tg_pred_err = np.asarray([tg[1] for tg in tg_vals])
-tl_pred_err = np.asarray([tl[1] for tl in tl_vals])
-tx_pred_err = np.asarray([tx[1] for tx in tx_vals])
-
 # Check if the formulas are in the same order. Add formulas that are not to lists to remove.
 remove_indices = []
 counter = 0
@@ -82,6 +55,7 @@ for i in range(0, len(act_form)):
 	if str(act_form[i]) != str(pred_form[i]):
 		remove_indices.append(i)
 		counter+=1
+		print("bad formulas: " + str(pred_form[i]) + ", " + str(act_form[i]))
 	else:
 		pass
 		
