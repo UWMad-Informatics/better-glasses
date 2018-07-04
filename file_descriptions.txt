@@ -1,0 +1,6 @@
+Files in this folder:
+- predictions_output.csv is the output from make_predictions.py. The predictions are made with 1 dataview and the dataview is not updated between predictions.
+- predict_data.csv are the data points to use with update_dataset.py, where the dataset and dataview are updated between sets of predictions.
+- training_data.csv is the csv written to create the training data to update the dataset in update_dataset.py
+- testing_data.csv is the csv written for the data to make predictions in update_dataset.py
+- pif.json is the pif file created to upload to a dataset in update_dataset.py to use new data points in training.

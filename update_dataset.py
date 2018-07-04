@@ -47,7 +47,7 @@ def main():
 		els = [list(x) for x in itertools.combinations(indices, i)]
 		combos.extend(els)
 	
-	del combos[0]
+	#del combos[0]
 	# Loop through each combo of the indices for training
 	for c in combos:
 		print(c)

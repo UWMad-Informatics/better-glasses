@@ -24,6 +24,9 @@ for arr in [act_trg,act_gamma,act_omega]:
 act_dict = {}
 for i in range(0, len(act_form)):
 	act_dict[act_form[i]] = [act_trg[i], act_gamma[i], act_omega[i]]
+trg_index = 0
+gamma_index = 1
+omega_index = 2
 
 #TODO: figure out how to not hard code this
 avg_trg_err = [0,0,0,0,0,0]
@@ -32,7 +35,7 @@ avg_omega_err = [0,0,0,0,0,0]
 
 # Predicted data folder
 #folder = "/Users/vanessa/Documents/Skunkworks/BMG/Data/Au Predictions"
-folder = "C:\\Users\\mvane\\Documents\\Skunkworks\\BMG\\Data\\Au Predictions"
+folder = "C:\\Users\\mvane\\Documents\\Skunkworks\\BMG\\Data\\Pt Predictions"
 for file in os.listdir(folder):
 	predicted_data = pd.read_csv(os.path.join(folder, file))
 	form = predicted_data['formula']
@@ -53,11 +56,11 @@ for file in os.listdir(folder):
 	for i in range(0, num_predicted):
 		# Don't add nan values from original data
 		if not math.isnan(act_dict[form[i]][0]):
-			trg_loss = np.append(trg_loss, math.sqrt(mean_squared_error([act_dict[form[i]][0]],[trg[i]])))
+			trg_loss = np.append(trg_loss, math.sqrt(mean_squared_error([act_dict[form[i]][trg_index]],[trg[i]])))
 		if not math.isnan(act_dict[form[i]][1]):
-			gamma_loss = np.append(gamma_loss, math.sqrt(mean_squared_error([act_dict[form[i]][1]],[gamma[i]])))
+			gamma_loss = np.append(gamma_loss, math.sqrt(mean_squared_error([act_dict[form[i]][gamma_index]],[gamma[i]])))
 		if not math.isnan(act_dict[form[i]][2]):
-			omega_loss = np.append(omega_loss, math.sqrt(mean_squared_error([act_dict[form[i]][2]],[omega[i]])))
+			omega_loss = np.append(omega_loss, math.sqrt(mean_squared_error([act_dict[form[i]][omega_index]],[omega[i]])))
 
 	for x in [trg_loss, gamma_loss, omega_loss]:
 		x = x[~np.isnan(x)]
@@ -76,6 +79,6 @@ for file in os.listdir(folder):
 		avg_gamma_err[num_predicted-1] = temp_gamma_err
 		avg_omega_err[num_predicted-1] = temp_omega_err
 
-print("Trg Errors: " + str(avg_trg_err))
-print("Gamma Errors: " + str(avg_gamma_err))
-print("Omega Errors: " + str(avg_omega_err))
+print("Trg NDME: " + str(avg_trg_err))
+print("Gamma NDME: " + str(avg_gamma_err))
+print("Omega NDME: " + str(avg_omega_err))
