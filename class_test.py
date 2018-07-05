@@ -3,6 +3,7 @@ import os
 import numpy as np
 import math
 from sklearn.metrics import mean_squared_error
+from formula_prediction import FormulaPrediction
 
 # Actual Data
 #act_data = pd.read_csv("/Users/vanessa/Documents/Skunkworks/BMG/Data/BMG_full_dataset_with_energies.csv")
@@ -26,7 +27,7 @@ for i in range(0, len(act_form)):
 	act_dict[act_form[i]] = [act_trg[i], act_gamma[i], act_omega[i]]
 trg_index = 0
 gamma_index = 1
-omega_index = 2
+omega_index = 2 
 
 #TODO: figure out how to not hard code this
 avg_trg_err = [0,0,0,0,0,0]
@@ -34,10 +35,13 @@ avg_gamma_err = [0,0,0,0,0,0]
 avg_omega_err = [0,0,0,0,0,0]
 
 # Make a dictionary to hold predicted values for each formula
-pred_dict = {}
-forms_predicted = pd.read_csv("predict_data.csv", columns="formula")
-for f in forms_predicted:
-	pred_dict[f] = [
+predict_junk = pd.read_csv("predict_data.csv")
+pred_form = predict_junk["formula"]
+predictions_by_formula = []
+for f in pred_form:
+	predictions_by_formula.append(FormulaPrediction(f))
+	
+
 
 # Predicted data folder
 #folder = "/Users/vanessa/Documents/Skunkworks/BMG/Data/Au Predictions"
@@ -53,9 +57,6 @@ for file in os.listdir(folder):
 	trg = tg/tl
 	gamma = tx/(tg + tl)
 	omega = (tg/tx) - 2*(tg/(tg + tl))
-	
-	# Analyze
-	for i in range(0, len(form)):
 		
 
 	trg_loss = np.empty(num_predicted)
