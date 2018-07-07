@@ -23,7 +23,7 @@ class FormulaPrediction(object):
 		:param predicted_values: The values associated with a prediction
 		:type predicted_values: list
 		"""
-		self.predictions[property] = predicted_values
+		self.predictions[property] = [predicted_values]
 		
 		
 	def update_prediction(self, property, predicted_values):
@@ -37,7 +37,7 @@ class FormulaPrediction(object):
 		:type predicted_values: list
 		"""
 		try:
-			self.predictions[property] = self.predictions[property].append(predicted_values)
+			self.predictions[property].append(predicted_values)
 		except KeyError:
 			raise Exception("The key %s is not listed as a predicted property for %s."%(property,self.formula))
 			
@@ -54,3 +54,12 @@ class FormulaPrediction(object):
 			return self.predictions[property]
 		except KeyError:
 			raise Exception("The key %s is not listed as a predicted property for %s."%(property,self.formula))
+			
+	
+	def list_predicted_props(self):
+		"""
+		Method that returns all the properties that have predictions stored
+		:return: a list of predicted properties
+		:rtype: list
+		"""
+		return self.predictions.keys()

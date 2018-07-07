@@ -33,12 +33,6 @@ avg_trg_err = [0,0,0,0,0,0]
 avg_gamma_err = [0,0,0,0,0,0]
 avg_omega_err = [0,0,0,0,0,0]
 
-# Make a dictionary to hold predicted values for each formula
-pred_dict = {}
-forms_predicted = pd.read_csv("predict_data.csv", columns="formula")
-for f in forms_predicted:
-	pred_dict[f] = [
-
 # Predicted data folder
 #folder = "/Users/vanessa/Documents/Skunkworks/BMG/Data/Au Predictions"
 folder = "C:\\Users\\mvane\\Documents\\Skunkworks\\BMG\\Data\\Tb Predictions"
@@ -53,10 +47,6 @@ for file in os.listdir(folder):
 	trg = tg/tl
 	gamma = tx/(tg + tl)
 	omega = (tg/tx) - 2*(tg/(tg + tl))
-	
-	# Analyze
-	for i in range(0, len(form)):
-		
 
 	trg_loss = np.empty(num_predicted)
 	gamma_loss = np.empty(num_predicted)
@@ -64,7 +54,7 @@ for file in os.listdir(folder):
 
 	# Calculate absolute error
 	for i in range(0, num_predicted):
-		try:
+		if form[i] != "Tb36Al24Co20Y20":
 			# Don't add nan values from original data
 			if not math.isnan(act_dict[form[i]][trg_index]):
 				trg_loss = np.append(trg_loss, math.sqrt(mean_squared_error([act_dict[form[i]][trg_index]],[trg[i]])))
@@ -72,27 +62,20 @@ for file in os.listdir(folder):
 				gamma_loss = np.append(gamma_loss, math.sqrt(mean_squared_error([act_dict[form[i]][gamma_index]],[gamma[i]])))
 			if not math.isnan(act_dict[form[i]][omega_index]):
 				omega_loss = np.append(omega_loss, math.sqrt(mean_squared_error([act_dict[form[i]][omega_index]],[omega[i]])))
-		except:
-			#print("KeyError: " + str(form[i]))
-			pass
 
-	# Remove instances of NaN
-	for x in [trg_loss, gamma_loss, omega_loss]:
-		x = x[~np.isnan(x)]
+			temp_trg_err = np.mean(trg_loss).tolist()
+			temp_gamma_err = np.mean(gamma_loss).tolist()
+			temp_omega_err = np.mean(omega_loss).tolist()
 
-	temp_trg_err = np.mean(trg_loss).tolist()
-	temp_gamma_err = np.mean(gamma_loss).tolist()
-	temp_omega_err = np.mean(omega_loss).tolist()
-
-	# Check to make sure there are already values at each position
-	if avg_trg_err[num_predicted-1] != 0:
-		avg_trg_err[num_predicted-1] = np.mean([temp_trg_err, avg_trg_err[num_predicted-1]])
-		avg_gamma_err[num_predicted-1] = np.mean([temp_gamma_err, avg_gamma_err[num_predicted-1]])
-		avg_omega_err[num_predicted-1] = np.mean([temp_omega_err, avg_omega_err[num_predicted-1]])
-	else:
-		avg_trg_err[num_predicted-1] = temp_trg_err
-		avg_gamma_err[num_predicted-1] = temp_gamma_err
-		avg_omega_err[num_predicted-1] = temp_omega_err
+			# Check to make sure there are already values at each position
+			if avg_trg_err[num_predicted-1] != 0:
+				avg_trg_err[num_predicted-1] = np.mean([temp_trg_err, avg_trg_err[num_predicted-1]])
+				avg_gamma_err[num_predicted-1] = np.mean([temp_gamma_err, avg_gamma_err[num_predicted-1]])
+				avg_omega_err[num_predicted-1] = np.mean([temp_omega_err, avg_omega_err[num_predicted-1]])
+			else:
+				avg_trg_err[num_predicted-1] = temp_trg_err
+				avg_gamma_err[num_predicted-1] = temp_gamma_err
+				avg_omega_err[num_predicted-1] = temp_omega_err
 
 print("Trg NDME: " + str(avg_trg_err))
 print("Gamma NDME: " + str(avg_gamma_err))
