@@ -1,7 +1,6 @@
 # This file is a method that takes in a csv with formula and formation energy for some BMG's
 # and make predictions on a given data view on citrination.
 # Predictions are written to a csv called predictions_output.csv
-
 import os
 import sys
 import datetime
@@ -15,7 +14,7 @@ def main():
 	client = CitrinationClient(os.environ["CITRINATION_API_KEY"], 'https://citrination.com')
 	
 	# Read in experimental data
-	filename = "C:/Users/mvane/Documents/Skunkworks/BMG/Data/BMG_full_dataset_with_energies - Copy.csv"
+	filename = "C:/Users/mvane/Documents/Skunkworks/BMG/Data/BMG_full_dataset_with_energies.csv"
 	exp_data = pd.read_csv(filename)
 	formula = exp_data['formula'].as_matrix()
 	energy = exp_data['PROPERTY: Nearest DFT Formation Energy (eV)'].as_matrix()

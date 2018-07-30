@@ -17,9 +17,6 @@ act_omega = act_data['PROPERTY: $\\omega$'].values
 trg_std = np.nanstd(act_trg)
 gamma_std = np.nanstd(act_gamma)
 omega_std = np.nanstd(act_omega)
-print(trg_std)
-print(gamma_std)
-print(omega_std)
 
 for arr in [act_trg,act_gamma,act_omega]:
 	arr = np.nan_to_num(arr).tolist()
@@ -38,7 +35,7 @@ avg_gamma_err = [0,0,0,0,0,0]
 avg_omega_err = [0,0,0,0,0,0]
 
 # Make a dictionary to hold predicted values for each formula
-predict_junk = pd.read_csv("predict_data.csv")
+predict_junk = pd.read_csv("Au_predict_data.csv")
 pred_form = predict_junk["formula"]
 predictions_by_formula = []
 for f in pred_form:
@@ -49,7 +46,7 @@ for f in pred_form:
 folder = "C:\\Users\\mvane\\Documents\\Skunkworks\\BMG\\Data\\Tb Predictions"
 for file in os.listdir(folder):
 	predicted_data = pd.read_csv(os.path.join(folder, file))
-	form = predicted_data['formula']
+	form = predicted_data['Formula']
 	tg = predicted_data['Property Tg'].values
 	tl = predicted_data['Property Tl'].values
 	tx = predicted_data['Property Tx'].values
@@ -66,7 +63,7 @@ for file in os.listdir(folder):
 		# Loop through all the possibl formulas in predictions_by_formula
 		for p in predictions_by_formula:
 			if p.formula == formula:
-				if "Trg" in p.list_predicted_props() :
+				if "Trg" in p.list_predicted_props():
 					# Don't add nan values from original data
 					if not math.isnan(act_dict[form[i]][trg_index]):
 						p.update_prediction("Trg", math.sqrt(mean_squared_error([act_dict[form[i]][trg_index]],[trg[i]])))

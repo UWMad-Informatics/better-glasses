@@ -12,6 +12,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from random import randrange
 
 def main():
 	start_time = time.time()
@@ -43,75 +44,75 @@ def main():
 	
 	# Generate all combos of the indices of the extra data to use for training/testing
 	combos = []
+	# Set how many combinations to randomly pull for each size of subset in the power set
+	num_rand_select = 4
 	for i in range(0, len(indices)):
-		els = [list(x) for x in itertools.combinations(indices, i)]
-		combos.extend(els)
-	
-	#del combos[0]
-	# Loop through each combo of the indices for training
-	for c in combos:
-		print(c)
+		combos = [list(x) for x in itertools.combinations(indices, i)]
 		
-		# for each index in the combination of training indices
-		input = []
-		for i in c:
-			# Convert to pif and store pif in JSON
-			input.append([form[i], energy[i], tg[i], tl[i], tx[i]])
-		
-		# Write to CSV and pass the csv file path to make_pif
-		with open("training_data.csv", 'w', newline='') as training_csv:
-			writer = csv.writer(training_csv)
-			writer.writerow(['formula', 'PROPERTY: Nearest DFT Formation Energy (eV)', 'PROPERTY: Tg (K)', 'PROPERTY: Tl (K)', 'PROPERTY: Tx (K)'])
-			for i in range(0, len(input)):
-				writer.writerow(input[i])
-		training_csv.close()
-		
-		pif_output = make_pif("training_data.csv")
-	
-		# Upload data. Params are (dataset id, file path)
-		client.data.upload(dataset_id, pif_output)
-		
-		click_save(url)
-		
-		# Wait for model to retrain
-		model_report_url = 'https://citrination.com/data_views/' + str(dataview_id) + '/data_summary'
-		wait_for_train(model_report_url)
-		
-		# Make predictions and store them to a CSV
-		# Make copies of the lists of all indices so we can remove the training indices
-		pred_form = form[:].tolist()
-		pred_energy = energy[:].tolist()
-		pred_tg = tg[:].tolist()
-		for i in reversed(c):
-			del pred_form[i]
-			del pred_energy[i]
-			del pred_tg[i]
-		
-		# Write the formula and energy of the points to predict to a CSV
-		predict_data_file = "testing_data.csv"
-		with open(predict_data_file, 'w', newline='') as testing_csv:
-			writer = csv.writer(testing_csv)
-			writer.writerow(['formula', 'PROPERTY: Nearest DFT Formation Energy (eV)'])
-			for i in range(0, len(pred_form)):
-				writer.writerow([pred_form[i], pred_energy[i]])
-		testing_csv.close()
-		
-		# Predict the Tg, Tl, Tx of these data points
-		# Add try, catch to prevent 'candidates' key error
-		err_count = 0
-		try:
-			make_predictions(client, predict_data_file, str(dataview_id))
-		except:
-			err_count+=1
-			while err_count < 10:
-				try:
-					make_predictions(client, predict_data_file, str(dataview_id))
-				except:
-					err_count+=1
+		# Loop through each combo of the indices for training
+		for c in range(0, num_rand_select):
+			one_combo = randrange(0, len(combos))			
+			# for each index in the combination of training indices
+			input = []
+			for i in combos[one_combo]:
+				# Convert to pif and store pif in JSON
+				input.append([form[i], energy[i], tg[i], tl[i], tx[i]])
 			
-		if err_count > 0:
-			print("Errors encountered with set " + str(c))
-		err_count = 0
+			# Write to CSV and pass the csv file path to make_pif
+			with open("training_data.csv", 'w', newline='') as training_csv:
+				writer = csv.writer(training_csv)
+				writer.writerow(['formula', 'PROPERTY: Nearest DFT Formation Energy (eV)', 'PROPERTY: Tg (K)', 'PROPERTY: Tl (K)', 'PROPERTY: Tx (K)'])
+				for i in range(0, len(input)):
+					writer.writerow(input[i])
+			training_csv.close()
+			
+			pif_output = make_pif("training_data.csv")
+		
+			# Upload data. Params are (dataset id, file path)
+			client.data.upload(dataset_id, pif_output)
+			time.sleep(10)
+			
+			click_save(url)
+			
+			# Wait for model to retrain
+			model_report_url = 'https://citrination.com/data_views/' + str(dataview_id) + '/data_summary'
+			wait_for_train(model_report_url)
+			
+			# Make predictions and store them to a CSV
+			# Make copies of the lists of all indices so we can remove the training indices
+			pred_form = form[:].tolist()
+			pred_energy = energy[:].tolist()
+			pred_tg = tg[:].tolist()
+			for i in reversed([c]):
+				del pred_form[i]
+				del pred_energy[i]
+				del pred_tg[i]
+			
+			# Write the formula and energy of the points to predict to a CSV
+			predict_data_file = "testing_data.csv"
+			with open(predict_data_file, 'w', newline='') as testing_csv:
+				writer = csv.writer(testing_csv)
+				writer.writerow(['formula', 'PROPERTY: Nearest DFT Formation Energy (eV)'])
+				for i in range(0, len(pred_form)):
+					writer.writerow([pred_form[i], pred_energy[i]])
+			testing_csv.close()
+			
+			# Predict the Tg, Tl, Tx of these data points
+			# Add try, catch to prevent 'candidates' key error
+			err_count = 0
+			try:
+				make_predictions(client, predict_data_file, str(dataview_id))
+			except:
+				err_count+=1
+				while err_count < 10:
+					try:
+						make_predictions(client, predict_data_file, str(dataview_id))
+					except:
+						err_count+=1
+				
+			if err_count > 0:
+				print("Errors encountered with set " + str(c))
+			err_count = 0
 	
 	print("Run time: " + str(time.time() - start_time))
 
