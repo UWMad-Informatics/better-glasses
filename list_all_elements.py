@@ -1,35 +1,40 @@
-from mdf_forge.forge import Forge
 from matminer.featurizers import composition as cf
 from matminer.utils.conversions import str_to_composition
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import csv
 import itertools
+from matminer.featurizers import composition as cf
+from matminer.utils.conversions import str_to_composition
 from pymatgen import Composition
 from pymatgen.core.periodic_table import Element
 
 # Read in dataset
-filepath = "C:\\Users\\mvane\\Documents\\GitHub\\better-glasses\\formulas.csv"
+filepath = "C:\\Users\\mvane\\Documents\\GitHub\\MAST-ML\\tests\\csv\\rfe_20_logrc.csv"
 glass_data = pd.read_csv(filepath)
-glass_data = glass_data['FORMULA']
-# Make the compositions of the glasses data into pymatgen objects to match the data from OQMD
-# Convert data into pandas dataframe
-glass_data = pd.DataFrame(data = glass_data, columns=['FORMULA'])
+glass_data = glass_data['formula']
 # Convert compositions to pymatgen objects.
-comps = str_to_composition(glass_data["FORMULA"])
+comps = str_to_composition(glass_data)
 
 # Loop through all elements and list the ones that come up.
 # Also keep track fo how many elements there are of each.
-count = {}
+all_elements = []
 for c in comps:
-	for key, value in c.items():
-		if key in count:
-			count[key] += 1
-		else:
-			count[key] = 1
-			
+	comp_contains = c.as_dict().keys()
+	for e in comp_contains:
+		if e not in all_elements:
+			all_elements.append(e)
+		
 with open('element_analysis.csv', 'w', newline='') as csv_file:
-    writer = csv.writer(csv_file)
-    for key, value in count.items():
-       writer.writerow([key, value])		
+	writer = csv.writer(csv_file)	
+	writer.writerow(all_elements)
+
+	for c in comps:
+		comp_contains = c.as_dict().keys()
+		contains = []
+		for a in all_elements:
+			if a in comp_contains:
+				contains.append(1)
+			else:
+				contains.append(0)
+		writer.writerow(contains)
