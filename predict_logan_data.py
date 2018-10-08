@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 import os
 from sklearn.metrics import f1_score, roc_curve, roc_auc_score
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib.pyplot import plot
 
 # Define cutoff value to check against than for GFA
