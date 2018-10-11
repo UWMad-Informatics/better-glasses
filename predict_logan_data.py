@@ -5,15 +5,16 @@ import csv
 import pandas as pd
 import numpy as np
 import os
-from sklearn.metrics import f1_score, roc_curve, roc_auc_score
+from sklearn.metrics import f1_score, roc_curve, auc
 import matplotlib
-matplotlib.use('Agg')
-from matplotlib.pyplot import plot
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 
 # Define cutoff value to check against than for GFA
 TRG_CUTOFF = .67
-GAMMA_CUTOFF = 0
-OMEGA_CUTOFF = 0
+GAMMA_CUTOFF_MIN = .35
+GAMMA_CUTOFF_MAX = .5
+OMEGA_CUTOFF = .3
 LOG_RC_CUTOFF = 6
 
 def main():
@@ -25,7 +26,7 @@ def main():
 	# Loop through MASTML results and read them in
 	root_dir = os.getcwd()
 	cv_method = "RepeatedKFold"
-	property = "PROPERTY: Trg"
+	property = "PROPERTY: $/gamma$"
 
 	avg_predictions = collect_mastml_results(root_dir, cv_method, property)
 
@@ -34,7 +35,7 @@ def main():
 	pred_gfa = []
 
 	for p in avg_predictions:
-		if p > TRG_CUTOFF:
+		if p >= GAMMA_CUTOFF_MIN and p <= GAMMA_CUTOFF_MAX:
 			pred_gfa.append(1)
 		else:
 			pred_gfa.append(0)
@@ -43,10 +44,10 @@ def main():
 	# Calc F1 Score
 	f1 = f1_score(actual_gfa, pred_gfa)
 	fpr, tpr, thresholds = roc_curve(actual_gfa, pred_gfa)
-	auc = roc_auc_score(fpr, tpr)
+	roc_auc = auc(fpr, tpr)
 
 	# Plot ROC
-	plt.plot(fpr, tpr, label=r'Mean ROC (AUC = %0.2f)' % (auc), lw=2, alpha=.8)
+	plt.plot(fpr, tpr, label=r'Mean ROC (AUC = %0.2f)' % (roc_auc), lw=2, alpha=.8)
 	plt.xlabel('False Positive Rate')
 	plt.ylabel('True Positive Rate')
 	plt.title('Receiver operating characteristic example')
@@ -78,7 +79,7 @@ def collect_mastml_results(root_dir, cv_method, property):
 
 	# Loop through every file and collect the "clean_predictions". Add them to a list
 	for f in os.listdir(cv_dir):
-		if "split" in f:
+		if "split_" in f:
 			split_folder = os.path.join(cv_dir, f)
 			predictions = pd.read_csv(os.path.join(split_folder, "predictions_Logan_Data.csv"))
 			property_prediction = predictions['clean_predictions']
