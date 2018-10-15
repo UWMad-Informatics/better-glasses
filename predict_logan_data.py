@@ -28,17 +28,7 @@ def main():
 	cv_method = "RepeatedKFold"
 	property = "PROPERTY: $/gamma$"
 
-	avg_predictions = collect_mastml_results(root_dir, cv_method, property)
-
-	# Loop through the predictions and categorize the prediction glass forming (1)
-	# or not (0)
-	pred_gfa = []
-
-	for p in avg_predictions:
-		if p >= GAMMA_CUTOFF_MIN and p <= GAMMA_CUTOFF_MAX:
-			pred_gfa.append(1)
-		else:
-			pred_gfa.append(0)
+	pred_gfa = collect_mastml_results(root_dir, cv_method, property)
 
 	# Check prediction of GFA against actual GFA. Write 1 if predictions match, 0 else
 	# Calc F1 Score
@@ -69,13 +59,15 @@ def main():
 	csvfile.close()
 
 def collect_mastml_results(root_dir, cv_method, property):
+	'''
+	Method to collect results from MASTML and compare predicted
+	'''
 	# Get to the directory that has all the splits from the CV method
 	cv_dir = "StandardScaler/DoNothing/RandomForestRegressor/" + cv_method
 	#cv_dir = cv_method
 	cv_dir = os.path.join(root_dir, cv_dir)
 
 	predicted_vals = []
-	avg_predictions = []
 
 	# Loop through every file and collect the "clean_predictions". Add them to a list
 	for f in os.listdir(cv_dir):
@@ -88,15 +80,26 @@ def collect_mastml_results(root_dir, cv_method, property):
 	# Convert to np array
 	predicted_vals = np.array(predicted_vals)
 
-	# Average all of the predictions
-	for i in range(0, len(predicted_vals[0])):
-		col = predicted_vals[:,i]
-		avg_predictions.append(np.mean(col))
+	# Check predicted value of GFA metric and convert to did/did not form glass classification
+	gfa_yes_count = 0
+	gfa_no_count = 0
+	for p in predicted_vals:
+		if p >= GAMMA_CUTOFF_MIN and p <= GAMMA_CUTOFF_MAX:
+			pred_gfa.append(1)
+			gfa_yes_count+=1
+		else:
+			pred_gfa.append(0)
+			gfa_no_count+=1
 
-	avg_predictions = np.array(avg_predictions)
-	np.savetxt("avg_prediction.csv", avg_predictions, delimiter=",")
+	# Calculate probability the material would form a glass given the metric (count
+	# number predicted true/total number)
+	prob_gfa = gfa_yes_count/(gfa_yes_count + gfa_no_count)
+
+	# Convert GFA categorical prediction array to np array and dump data to CSV
+	all_pred_gfa = np.array(pred_gfa)
+	np.savetxt("all_predictions.csv", all_pred_gfa, delimiter=",")
 	# return the average of the predictions
-	return avg_predictions
+	return prob_gfa
 
 
 # Run the script:
