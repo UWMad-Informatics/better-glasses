@@ -19,20 +19,42 @@ LOG_RC_CUTOFF = 6
 
 def main():
 	# Read in experimental data
-	exp_file = "pifs.csv"
-	exp_data = pd.read_csv(exp_file)
-	actual_gfa = exp_data['Glass forming ability'].values
+	#exp_file = "pifs.csv"
+	#exp_data = pd.read_csv(exp_file)
+	#actual_gfa = exp_data['Glass forming ability'].values
+	#actual_formula = exp
 
 	# Loop through MASTML results and read them in
 	root_dir = os.getcwd()
 	cv_method = "RepeatedKFold"
 	property = "PROPERTY: $/gamma$"
 
-	pred_gfa = collect_mastml_results(root_dir, cv_method, property)
+	# Get a dictionary of formula:probability of predicted glass formation
+	pred_gfa_dict = collect_mastml_results(root_dir, cv_method, property)
+
+	# Match formula for experimental data and for predicted data
+	exp_file = "magpie_gamma.xlsx"
+	exp_data = pd.read_excel(exp_file)
+	exp_formula = exp_data['formula'].values.tolist()
+	exp_gfa = exp_data["GFA"].values.tolist()
+	logan_data_marker = exp_data["Logan_Data"]
+	# drop the values that aren't Logan's data
+	for i in reversed(range(0, len(exp_formula))):
+		if logan_data_marker[i] == 0:
+			del exp_formula[i]
+			del exp_gfa[i]
+
+	pred_gfa = []
+	actual_gfa = []
+	for i in range(0, len(exp_formula)):
+		f = exp_formula[i]
+		if f in pred_gfa_dict.keys():
+			actual_gfa.append(exp_gfa[i])
+			pred_gfa.append(pred_gfa_dict[f])
 
 	# Check prediction of GFA against actual GFA. Write 1 if predictions match, 0 else
 	# Calc F1 Score
-	f1 = f1_score(actual_gfa, pred_gfa)
+	#f1 = f1_score(actual_gfa, pred_gfa)
 	fpr, tpr, thresholds = roc_curve(actual_gfa, pred_gfa)
 	roc_auc = auc(fpr, tpr)
 
@@ -40,7 +62,7 @@ def main():
 	plt.plot(fpr, tpr, label=r'Mean ROC (AUC = %0.2f)' % (roc_auc), lw=2, alpha=.8)
 	plt.xlabel('False Positive Rate')
 	plt.ylabel('True Positive Rate')
-	plt.title('Receiver operating characteristic example')
+	plt.title('$\gamma$ Receiver Operating Characteristic')
 	plt.legend(loc="lower right")
 	plt.savefig("roc_curve.png")
 
@@ -50,7 +72,7 @@ def main():
 	with open(folder_out, 'w', newline='') as csvfile:
 		wr = csv.writer(csvfile)
 		wr.writerow(["GFA Predictions"])
-		wr.writerow(["F1 Score: " + str(f1)])
+		#wr.writerow(["F1 Score: " + str(f1)])
 		wr.writerow("")
 		wr.writerow(["Actual GFA", "Predicted GFA"])
 		rows = zip(actual_gfa, pred_gfa)
@@ -68,38 +90,50 @@ def collect_mastml_results(root_dir, cv_method, property):
 	cv_dir = os.path.join(root_dir, cv_dir)
 
 	predicted_vals = []
+	predicted_formula = []
 
 	# Loop through every file and collect the "clean_predictions". Add them to a list
 	for f in os.listdir(cv_dir):
 		if "split_" in f:
 			split_folder = os.path.join(cv_dir, f)
 			predictions = pd.read_csv(os.path.join(split_folder, "predictions_Logan_Data.csv"))
-			property_prediction = predictions['clean_predictions']
-			predicted_vals.append(property_prediction)
+			property_prediction = predictions['clean_predictions'].values
+			for p in property_prediction:
+				predicted_vals.append(p)
+			temp_formula = predictions['formula'].values
+			for f in temp_formula:
+				predicted_formula.append(f)
 
-	# Convert to np array
-	predicted_vals = np.array(predicted_vals)
+	# Make dictionary of formula:[prediction values list]
+	predicted_dict = {}
+	for i in range(0, len(predicted_vals)):
+		if predicted_formula[i] in predicted_dict.keys():
+			predicted_dict[predicted_formula[i]].append(predicted_vals[i])
+		else:
+			predicted_dict[predicted_formula[i]] = [predicted_vals[i]]
 
 	# Check predicted value of GFA metric and convert to did/did not form glass classification
-	gfa_yes_count = 0
-	gfa_no_count = 0
-	for p in predicted_vals:
-		if p >= GAMMA_CUTOFF_MIN and p <= GAMMA_CUTOFF_MAX:
-			pred_gfa.append(1)
-			gfa_yes_count+=1
-		else:
-			pred_gfa.append(0)
-			gfa_no_count+=1
-
-	# Calculate probability the material would form a glass given the metric (count
-	# number predicted true/total number)
-	prob_gfa = gfa_yes_count/(gfa_yes_count + gfa_no_count)
+	gfa_dict = {}
+	for k in predicted_dict.keys():
+		gfa_yes_count = 0
+		gfa_no_count = 0
+		for p in predicted_dict[k]:
+			if p >= GAMMA_CUTOFF_MIN and p <= GAMMA_CUTOFF_MAX:
+				#pred_gfa.append(1)
+				gfa_yes_count+=1
+			else:
+				#pred_gfa.append(0)
+				gfa_no_count+=1
+		# Calculate probability the material would form a glass given the metric (count
+		# number predicted true/total number)
+		prob_gfa = gfa_yes_count/(gfa_yes_count + gfa_no_count)
+		gfa_dict[k] = prob_gfa
 
 	# Convert GFA categorical prediction array to np array and dump data to CSV
-	all_pred_gfa = np.array(pred_gfa)
-	np.savetxt("all_predictions.csv", all_pred_gfa, delimiter=",")
+	#all_pred_gfa = np.array(pred_gfa)
+	#np.savetxt("all_predictions.csv", all_pred_gfa, delimiter=",")
 	# return the average of the predictions
-	return prob_gfa
+	return gfa_dict
 
 
 # Run the script:

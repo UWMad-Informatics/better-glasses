@@ -14,12 +14,13 @@ filepath = "pifs.csv"
 glass_data = pd.read_csv(filepath)
 # Make the compositions of the glasses data into pymatgen objects to match the data from OQMD
 # Convert compositions to pymatgen objects.
-comps = StrToComposition().featurize_dataframe(glass_data, "formula")["composition"]
+comps = StrToComposition().featurize_dataframe(glass_data, "formula", ignore_errors=True)["composition"]
 
 # Loop through all elements and list the ones that come up.
 # Also keep track fo how many elements there are of each.
 majority = []
 for c in comps:
+	print(c)
 	max_comp = -1
 	main_element = ""
 	elements = c.items()
