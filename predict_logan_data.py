@@ -94,10 +94,12 @@ def collect_mastml_results(root_dir, cv_method, property):
 
 	# Loop through every file and collect the "clean_predictions". Add them to a list
 	for f in os.listdir(cv_dir):
+		# For every split folder (only works with KFold CV), read in predictions
 		if "split_" in f:
 			split_folder = os.path.join(cv_dir, f)
 			predictions = pd.read_csv(os.path.join(split_folder, "predictions_Logan_Data.csv"))
 			property_prediction = predictions['clean_predictions'].values
+			# Add every prediction and formula to an array (1D)
 			for p in property_prediction:
 				predicted_vals.append(p)
 			temp_formula = predictions['formula'].values
@@ -113,27 +115,24 @@ def collect_mastml_results(root_dir, cv_method, property):
 			predicted_dict[predicted_formula[i]] = [predicted_vals[i]]
 
 	# Check predicted value of GFA metric and convert to did/did not form glass classification
-	gfa_dict = {}
+	gfa_avg = []
 	for k in predicted_dict.keys():
-		gfa_yes_count = 0
-		gfa_no_count = 0
-		for p in predicted_dict[k]:
-			if p >= GAMMA_CUTOFF_MIN and p <= GAMMA_CUTOFF_MAX:
-				#pred_gfa.append(1)
-				gfa_yes_count+=1
-			else:
-				#pred_gfa.append(0)
-				gfa_no_count+=1
+		#gfa_yes_count = 0
+		#gfa_no_count = 0
+		#for p in predicted_dict[k]:
+		#	if p >= GAMMA_CUTOFF_MIN and p <= GAMMA_CUTOFF_MAX:
+		#		#pred_gfa.append(1)
+		#		gfa_yes_count+=1
+		#	else:
+		#		#pred_gfa.append(0)
+		#		gfa_no_count+=1
 		# Calculate probability the material would form a glass given the metric (count
 		# number predicted true/total number)
-		prob_gfa = gfa_yes_count/(gfa_yes_count + gfa_no_count)
-		gfa_dict[k] = prob_gfa
+		#prob_gfa = gfa_yes_count/(gfa_yes_count + gfa_no_count)
+		#gfa_dict[k] = prob_gfa
+		gfa_avg.append(np.mean(predicted_dict[k]))
 
-	# Convert GFA categorical prediction array to np array and dump data to CSV
-	#all_pred_gfa = np.array(pred_gfa)
-	#np.savetxt("all_predictions.csv", all_pred_gfa, delimiter=",")
-	# return the average of the predictions
-	return gfa_dict
+	return gfa_avg
 
 
 # Run the script:
