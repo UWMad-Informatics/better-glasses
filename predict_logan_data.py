@@ -18,22 +18,16 @@ OMEGA_CUTOFF = .3
 LOG_RC_CUTOFF = 6
 
 def main():
-	# Read in experimental data
-	#exp_file = "pifs.csv"
-	#exp_data = pd.read_csv(exp_file)
-	#actual_gfa = exp_data['Glass forming ability'].values
-	#actual_formula = exp
-
 	# Loop through MASTML results and read them in
 	root_dir = os.getcwd()
 	cv_method = "RepeatedKFold"
-	property = "PROPERTY: $/gamma$"
+	property = "PROPERTY: $\omega$"
 
 	# Get a dictionary of formula:probability of predicted glass formation
 	pred_gfa_dict = collect_mastml_results(root_dir, cv_method, property)
 
 	# Match formula for experimental data and for predicted data
-	exp_file = "magpie_gamma.xlsx"
+	exp_file = "magpie_omega.xlsx"
 	exp_data = pd.read_excel(exp_file)
 	exp_formula = exp_data['formula'].values.tolist()
 	exp_gfa = exp_data["GFA"].values.tolist()
@@ -62,7 +56,7 @@ def main():
 	plt.plot(fpr, tpr, label=r'Mean ROC (AUC = %0.2f)' % (roc_auc), lw=2, alpha=.8)
 	plt.xlabel('False Positive Rate')
 	plt.ylabel('True Positive Rate')
-	plt.title('$\gamma$ Receiver Operating Characteristic')
+	plt.title('Trg Receiver Operating Characteristic')
 	plt.legend(loc="lower right")
 	plt.savefig("roc_curve.png")
 
@@ -86,7 +80,6 @@ def collect_mastml_results(root_dir, cv_method, property):
 	'''
 	# Get to the directory that has all the splits from the CV method
 	cv_dir = "StandardScaler/DoNothing/RandomForestRegressor/" + cv_method
-	#cv_dir = cv_method
 	cv_dir = os.path.join(root_dir, cv_dir)
 
 	predicted_vals = []
@@ -94,12 +87,10 @@ def collect_mastml_results(root_dir, cv_method, property):
 
 	# Loop through every file and collect the "clean_predictions". Add them to a list
 	for f in os.listdir(cv_dir):
-		# For every split folder (only works with KFold CV), read in predictions
 		if "split_" in f:
 			split_folder = os.path.join(cv_dir, f)
 			predictions = pd.read_csv(os.path.join(split_folder, "predictions_Logan_Data.csv"))
 			property_prediction = predictions['clean_predictions'].values
-			# Add every prediction and formula to an array (1D)
 			for p in property_prediction:
 				predicted_vals.append(p)
 			temp_formula = predictions['formula'].values
@@ -114,23 +105,10 @@ def collect_mastml_results(root_dir, cv_method, property):
 		else:
 			predicted_dict[predicted_formula[i]] = [predicted_vals[i]]
 
-	# Check predicted value of GFA metric and convert to did/did not form glass classification
-	gfa_avg = []
+	# Make a list of the average value of the GFA metric for each formula
+	gfa_avg = {}
 	for k in predicted_dict.keys():
-		#gfa_yes_count = 0
-		#gfa_no_count = 0
-		#for p in predicted_dict[k]:
-		#	if p >= GAMMA_CUTOFF_MIN and p <= GAMMA_CUTOFF_MAX:
-		#		#pred_gfa.append(1)
-		#		gfa_yes_count+=1
-		#	else:
-		#		#pred_gfa.append(0)
-		#		gfa_no_count+=1
-		# Calculate probability the material would form a glass given the metric (count
-		# number predicted true/total number)
-		#prob_gfa = gfa_yes_count/(gfa_yes_count + gfa_no_count)
-		#gfa_dict[k] = prob_gfa
-		gfa_avg.append(np.mean(predicted_dict[k]))
+		gfa_avg[k] = np.mean(predicted_dict[k])
 
 	return gfa_avg
 
