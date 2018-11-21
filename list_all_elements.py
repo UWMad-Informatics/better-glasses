@@ -10,7 +10,7 @@ from pymatgen import Composition
 from pymatgen.core.periodic_table import Element
 
 # Read in dataset
-filepath = "C:\\Users\\mvane\\Documents\\GitHub\\MAST-ML\\tests\\csv\\rfe_20_logrc.csv"
+filepath = "bmg_trg_nologan.csv"
 glass_data = pd.read_csv(filepath)
 glass_data = glass_data['formula']
 # Convert compositions to pymatgen objects.
@@ -24,11 +24,12 @@ for c in comps:
 	for e in comp_contains:
 		if e not in all_elements:
 			all_elements.append(e)
-		
+
 with open('element_analysis.csv', 'w', newline='') as csv_file:
-	writer = csv.writer(csv_file)	
+	writer = csv.writer(csv_file)
 	writer.writerow(all_elements)
 
+	# Go through every composition in the dataset
 	for c in comps:
 		comp_contains = c.as_dict().keys()
 		contains = []

@@ -5,7 +5,7 @@ import csv
 import pandas as pd
 import numpy as np
 import os
-from sklearn.metrics import f1_score, roc_curve, auc
+from sklearn.metrics import f1_score, roc_curve, auc, precision_recall_curve, average_precision_score
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
@@ -21,13 +21,13 @@ def main():
 	# Loop through MASTML results and read them in
 	root_dir = os.getcwd()
 	cv_method = "RepeatedKFold"
-	property = "PROPERTY: $\omega$"
+	property = "PROPERTY: Trg"
 
 	# Get a dictionary of formula:probability of predicted glass formation
 	pred_gfa_dict = collect_mastml_results(root_dir, cv_method, property)
 
 	# Match formula for experimental data and for predicted data
-	exp_file = "magpie_omega.xlsx"
+	exp_file = "magpie_trg.xlsx"
 	exp_data = pd.read_excel(exp_file)
 	exp_formula = exp_data['formula'].values.tolist()
 	exp_gfa = exp_data["GFA"].values.tolist()
@@ -49,16 +49,34 @@ def main():
 	# Check prediction of GFA against actual GFA. Write 1 if predictions match, 0 else
 	# Calc F1 Score
 	#f1 = f1_score(actual_gfa, pred_gfa)
-	fpr, tpr, thresholds = roc_curve(actual_gfa, pred_gfa)
-	roc_auc = auc(fpr, tpr)
+	#fpr, tpr, thresholds = roc_curve(actual_gfa, pred_gfa)
+	#roc_auc = auc(fpr, tpr)
+
+	# Calc precision and recall and plot
+	precision, recall, thresholds = precision_recall_curve(actual_gfa, pred_gfa)
+	average_precision = average_precision_score(actual_gfa, pred_gfa)
+
+	# Plot prec/recall curve
+	step_kwargs = ({'step': 'post'})
+               #if 'step' in signature(plt.fill_between).parameters
+               #else {})
+	plt.step(recall, precision, color='b', where='post')
+	#plt.fill_between(recall, precision, alpha=0.2, color='b', **step_kwargs)
+
+	plt.xlabel('Recall')
+	plt.ylabel('Precision')
+	plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(
+          average_precision))
+	plt.savefig("precision_recall_curve.png")
+
 
 	# Plot ROC
-	plt.plot(fpr, tpr, label=r'Mean ROC (AUC = %0.2f)' % (roc_auc), lw=2, alpha=.8)
-	plt.xlabel('False Positive Rate')
-	plt.ylabel('True Positive Rate')
-	plt.title('Trg Receiver Operating Characteristic')
-	plt.legend(loc="lower right")
-	plt.savefig("roc_curve.png")
+	#plt.plot(fpr, tpr, label=r'Mean ROC (AUC = %0.2f)' % (roc_auc), lw=2, alpha=.8)
+	#plt.xlabel('False Positive Rate')
+	#plt.ylabel('True Positive Rate')
+	#plt.title('Trg Receiver Operating Characteristic')
+	#plt.legend(loc="lower right")
+	#plt.savefig("roc_curve.png")
 
 	# Write all GFA comparison to CSV files with date and time
 	# Folder path:
