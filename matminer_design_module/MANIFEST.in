@@ -1,0 +1,10 @@
+include LICENSE *.txt
+include matminer/datasets/*.csv
+include matminer/featurizers/*.yaml
+include matminer/utils/data_files/*.csv
+include matminer/utils/data_files/*.json
+include matminer/utils/data_files/magpie_elementdata/*.table
+recursive-include matminer *
+recursive-exclude matminer *.pyc
+recursive-include docs *
+recursive-exclude docs *.pyc
